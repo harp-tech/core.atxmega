@@ -15,7 +15,7 @@
 /* Define current version                                               */
 /************************************************************************/
 #define VH 1
-#define VL 6
+#define VL 7
 /************************************************************************/
 
 /************************************************************************/
@@ -71,6 +71,7 @@ static uint8_t sending_com_register_add;
 /* Control of send all the register                                     */
 /************************************************************************/
 static uint8_t default_device_name[25];
+static bool enables_serial_number_update = false;
 
 /************************************************************************/
 /* Headers                                                              */
@@ -97,6 +98,7 @@ static struct CommonBank
 	uint8_t	R_OPERATION_CTRL;
 	uint8_t	R_RESET_DEV;
 	uint8_t R_DEVICE_NAME[25];
+	uint16_t R_SERIAL_NUMBER;
 } commonbank;
 
 static uint8_t regs_type[] = {
@@ -112,7 +114,8 @@ static uint8_t regs_type[] = {
 	TYPE_U16,
 	TYPE_U8,
 	TYPE_U8,
-    TYPE_U8
+    TYPE_U8,
+	TYPE_U16
 };
 
 static uint16_t regs_n_elements[] = {
@@ -128,7 +131,8 @@ static uint16_t regs_n_elements[] = {
 	1,
 	1,
 	1,
-	25
+	25,
+	1
 };
 
 static uint8_t *regs_pointer[] = {
@@ -144,7 +148,8 @@ static uint8_t *regs_pointer[] = {
 	(uint8_t*)(&commonbank.R_TIMESTAMP_MICRO),
 	(uint8_t*)(&commonbank.R_OPERATION_CTRL),
 	(uint8_t*)(&commonbank.R_RESET_DEV),
-    (uint8_t*)(commonbank.R_DEVICE_NAME)
+    (uint8_t*)(commonbank.R_DEVICE_NAME),
+    (uint8_t*)(&commonbank.R_SERIAL_NUMBER)
 };
 
 
@@ -198,8 +203,8 @@ static uint8_t _500us_cca_index = 0;
 #define EEPROM_ADD_R_OPERATION_CTRL 1
 #define EEPROM_ADD_R_FW_VERSION_H   2
 #define EEPROM_ADD_R_HARP_VERSION_H 3
-#define EEPROM_ADD_AVAILABLE0       4
-#define EEPROM_ADD_AVAILABLE1       5
+#define EEPROM_ADD_SN_HIGH          4
+#define EEPROM_ADD_SN_LOW           5
 #define EEPROM_ADD_AVAILABLE2       6
 #define EEPROM_ADD_R_DEVICE_NAME    7
 #define EEPROM_ADD_APP_REG          32
@@ -347,6 +352,10 @@ void core_func_start_core (
     {
         *(default_device_name + i) = commonbank.R_DEVICE_NAME[i];
     }
+	
+	/* Get serial number */
+	commonbank.R_SERIAL_NUMBER = eeprom_rd_byte(EEPROM_ADD_SN_HIGH);
+	commonbank.R_SERIAL_NUMBER = ((commonbank.R_SERIAL_NUMBER << 8) & 0xFF00) | eeprom_rd_byte(EEPROM_ADD_SN_LOW);
 
 	/* Start 1 second timer */
 	timer_type1_enable(&TCC1, TIMER_PRESCALER_DIV1024, 31250, INT_LEVEL_LOW);
@@ -1089,6 +1098,34 @@ bool hwbp_write_common_reg(uint8_t add, uint8_t type, uint8_t * content, uint16_
         /* Return success */
         return true;
     }
+	
+	/* ADD_R_DEVICE_NAME */
+	else if (add == ADD_R_SERIAL_NUMBER)
+	{
+		if (*((uint16_t*)(content)) == 0xFFFF)
+		{
+			enables_serial_number_update = true;
+		}
+		else
+		{
+			if (enables_serial_number_update)
+			{
+				//uint16_t serial_number = *((uint16_t*)(content));
+				eeprom_wr_byte(EEPROM_ADD_SN_LOW,  *(content+0));
+				eeprom_wr_byte(EEPROM_ADD_SN_HIGH, *(content+1));
+				
+				shutdown_counter = 3;				
+			}
+			else
+			{
+				/* Not possible to write a serial number if not enabled before */
+				return false;
+			}
+		}
+		
+		/* Return success */
+		return true;
+	}
 
 	/* Return error */
 	return false;
