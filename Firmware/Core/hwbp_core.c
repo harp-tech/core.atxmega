@@ -15,7 +15,7 @@
 /* Define current version                                               */
 /************************************************************************/
 #define VH 1
-#define VL 7
+#define VL 8
 /************************************************************************/
 
 /************************************************************************/
@@ -696,8 +696,12 @@ static void parse_and_reply(uint8_t * packet_p, uint16_t len)
 /************************************************************************/
 static uint8_t * reg_p;
 
+extern bool clock_was_just_updated_externaly;
+
 static void xmit_error(uint8_t header, uint8_t * packet)
-{	
+{		
+	clock_was_just_updated_externaly = false;
+	
 	/* Check if packet is above limits */
 	if ( (packet[1] + 2 + 6) > (MAX_PACKET_SIZE - 1) )
 		return;
@@ -734,6 +738,34 @@ static void xmit_error(uint8_t header, uint8_t * packet)
                 *((uint32_t*)(packet+5)) = commonbank.R_TIMESTAMP_SECOND+1; // update second
             }
         }            
+	}
+	
+	if (clock_was_just_updated_externaly)
+	{
+		/* Update second */
+		if (TCC1_INTFLAGS & TC1_OVFIF_bm)
+		{
+			/* Add 1 if the new second interrupt FLAG is already set */
+			*((uint32_t*)(packet+5)) = commonbank.R_TIMESTAMP_SECOND+1;	// update second
+			*((uint16_t*)(packet+9)) = TCC1_CNT;				        // update microsecond
+		}
+		else
+		{
+			*((uint32_t*)(packet+5)) = commonbank.R_TIMESTAMP_SECOND;	// update second
+			*((uint16_t*)(packet+9)) = TCC1_CNT;						// update microsecond
+			
+			if (_500us_cca_index == 208)
+			{
+				/* It may be on the last timer iteration */
+				
+				if (*((uint16_t*)(packet+9)) < _500us_cca_values[0])
+				{
+					/* This is not possible unless the timer overflow happened on this instant */
+					
+					*((uint32_t*)(packet+5)) = commonbank.R_TIMESTAMP_SECOND+1; // update second
+				}
+			}
+		}
 	}
 	
 	check_checksum(packet, packet[1] + 1, packet[packet[1] + 1]);	// update checksum
@@ -807,6 +839,8 @@ void core_func_mark_user_timestamp(void)
 
 static void xmit(uint8_t add, uint8_t header, bool use_core_timestamp)
 {
+	clock_was_just_updated_externaly = false;
+	
 	uint8_t type;
 	uint16_t n_elements;
 
@@ -858,6 +892,33 @@ static void xmit(uint8_t add, uint8_t header, bool use_core_timestamp)
         	    }
     	    }
 	    }
+		
+		if (clock_was_just_updated_externaly)
+		{
+			if (TCC1_INTFLAGS & TC1_OVFIF_bm)
+			{
+				/* Add 1 if the new second interrupt FLAG is already set */
+				*((uint32_t*)(reply_buff+5)) = commonbank.R_TIMESTAMP_SECOND+1;	// update second
+				*((uint16_t*)(reply_buff+9)) = TCC1_CNT;				        // update microsecond
+			}
+			else
+			{
+				*((uint32_t*)(reply_buff+5)) = commonbank.R_TIMESTAMP_SECOND;	// update second
+				*((uint16_t*)(reply_buff+9)) = TCC1_CNT;						// update microsecond
+				
+				if (_500us_cca_index == 208)
+				{
+					/* It may be on the last timer iteration */
+					
+					if (*((uint16_t*)(reply_buff+9)) < _500us_cca_values[0])
+					{
+						/* This is not possible unless the timer overflow happened on this instant */
+						
+						*((uint32_t*)(reply_buff+5)) = commonbank.R_TIMESTAMP_SECOND+1; // update second
+					}
+				}
+			}
+		}
         
         if (add == ADD_R_TIMESTAMP_SECOND)
         {

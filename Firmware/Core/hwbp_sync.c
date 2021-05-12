@@ -17,6 +17,8 @@
     static uint32_t* core_timestamp_pointer;
 #endif
 
+bool clock_was_just_updated_externaly = false;
+
 
 /*****************************************************************************/
 /* Configure timestamp UART (100 Kbps), pins TX/RX and save SECOND pointers  */
@@ -262,6 +264,8 @@ void trigger_sync_timer (void)
             
             TCC1_CNT = 31225 - converging;
             TCC1_CCA = 31233;
+			
+			clock_was_just_updated_externaly = true;
             
             /*
             TCC1_CTRLA = TIMER_PRESCALER_DIV1024;
