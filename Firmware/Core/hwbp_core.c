@@ -812,6 +812,8 @@ void core_func_read_user_timestamp(uint32_t *seconds, uint16_t *useconds)
 
 void core_func_mark_user_timestamp(void)
 {
+	clock_was_just_updated_externaly = false;
+	
     if (TCC1_INTFLAGS & TC1_OVFIF_bm)
     {
         /* Add 1 if the new second interrupt FLAG is already set */
@@ -835,6 +837,33 @@ void core_func_mark_user_timestamp(void)
             }
         }
     }
+	
+	if (clock_was_just_updated_externaly)
+	{
+		if (TCC1_INTFLAGS & TC1_OVFIF_bm)
+		{
+			/* Add 1 if the new second interrupt FLAG is already set */
+			user_R_TIMESTAMP_SECOND = commonbank.R_TIMESTAMP_SECOND+1;
+			user_TCC1_CNT = TCC1_CNT;
+		}
+		else
+		{
+			user_R_TIMESTAMP_SECOND = commonbank.R_TIMESTAMP_SECOND;
+			user_TCC1_CNT = TCC1_CNT;
+			
+			if (_500us_cca_index == 208)
+			{
+				/* It may be on the last timer iteration */
+				
+				if (user_TCC1_CNT < _500us_cca_values[0])
+				{
+					/* This is not possible unless the timer overflow happened on this instant */
+					
+					user_R_TIMESTAMP_SECOND = commonbank.R_TIMESTAMP_SECOND+1; // update second
+				}
+			}
+		}
+	}
 }
 
 static void xmit(uint8_t add, uint8_t header, bool use_core_timestamp)
