@@ -51,10 +51,13 @@
 #define B_BOOT_EE           (1<<7)
 
 /* ADD_R_CONFIG */
-#define B_LOCK              (1<<0)
-#define B_UNCLOCK           (1<<1)
-#define B_T_GEN             (1<<2)
-#define B_T_REPEAT          (1<<3)
+#define B_CLK_REP           (1<<0)
+#define B_CLK_GEN           (1<<1)
+#define B_CLK_SAVE          (1<<2)
+#define B_REP_ABLE          (1<<3)
+#define B_GEN_ABLE          (1<<4)
+#define B_CLK_UNLOCK        (1<<6)
+#define B_CLK_LOCK          (1<<7)
 
 
 #endif /* _HWBP_CORE_REGS_H_ */

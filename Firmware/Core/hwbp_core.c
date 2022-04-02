@@ -15,7 +15,7 @@
 /* Define current version                                               */
 /************************************************************************/
 #define VH 1
-#define VL 9
+#define VL 10
 /************************************************************************/
 
 /************************************************************************/
@@ -99,7 +99,7 @@ static struct CommonBank
 	uint8_t	R_RESET_DEV;
 	uint8_t R_DEVICE_NAME[25];
 	uint16_t R_SERIAL_NUMBER;
-	uint8_t R_CONFIG;
+	uint8_t R_CLOCK_CONFIG;
 } commonbank;
 
 static uint8_t regs_type[] = {
@@ -153,7 +153,7 @@ static uint8_t *regs_pointer[] = {
 	(uint8_t*)(&commonbank.R_RESET_DEV),
     (uint8_t*)(commonbank.R_DEVICE_NAME),
     (uint8_t*)(&commonbank.R_SERIAL_NUMBER),
-	(uint8_t*)(&commonbank.R_CONFIG)
+	(uint8_t*)(&commonbank.R_CLOCK_CONFIG)
 };
 
 
@@ -209,7 +209,7 @@ static uint8_t _500us_cca_index = 0;
 #define EEPROM_ADD_R_HARP_VERSION_H 3
 #define EEPROM_ADD_SN_HIGH          4
 #define EEPROM_ADD_SN_LOW           5
-#define EEPROM_ADD_CONFIG           6
+#define EEPROM_ADD_CLOCK_CONFIG     6
 #define EEPROM_ADD_R_DEVICE_NAME    7
 #define EEPROM_ADD_APP_REG          32
 
@@ -260,7 +260,9 @@ void core_func_start_core (
     uint8_t *pointer_to_app_regs,
     const uint16_t app_mem_size_to_save,
     const uint8_t num_of_app_registers,
-    const uint8_t *device_name)
+    const uint8_t *device_name,
+    const bool	device_is_able_to_repeat_clock,
+    const bool	device_is_able_to_generate_clock)
 {	
 	/* Shut down watchdog */
 	wdt_disable();
@@ -299,7 +301,7 @@ void core_func_start_core (
         
         /* Write the device name for the first time */
         write_device_name_to_eeprom(device_name);        
-        
+		
         /* Force device to start with default values */
         eeprom_wr_byte(EEPROM_ADD_MEM_IN_USE, EEPROM_RST_USE_REGS_DEF);
     }
@@ -317,9 +319,9 @@ void core_func_start_core (
     }        
 	
 	/* Callback to start the device */
-	core_callback_1st_config_hw_after_boot();
+	core_callback_initialize_hardware();
 
-	/* Check if the EEPROM is clean or have data */
+	/* Check if the EEPROM should be used as registers' content */
 	if (eeprom_rd_byte(EEPROM_ADD_MEM_IN_USE) == EEPROM_RST_USE_REGS_EE)
 	{
 		commonbank.R_OPERATION_CTRL = eeprom_rd_byte(EEPROM_ADD_R_OPERATION_CTRL);
@@ -327,14 +329,47 @@ void core_func_start_core (
 		for (uint16_t i = 0; i < app_mem_size_to_save; i++)
 			*(pointer_to_app_regs + i) = eeprom_rd_byte(EEPROM_ADD_APP_REG + i);
 		
+		commonbank.R_CLOCK_CONFIG = eeprom_rd_byte(EEPROM_ADD_CLOCK_CONFIG);
+		commonbank.R_CLOCK_CONFIG &=  ~B_CLK_LOCK;		// Always remove LOCK after boot
+		commonbank.R_CLOCK_CONFIG |=   B_CLK_UNLOCK;
+		
+		/* Check if CONFIG register was never used before */
+		/* Since it's a new register, previous devices don't have any data */
+		if (commonbank.R_CLOCK_CONFIG == 0xFF)
+		{
+			commonbank.R_CLOCK_CONFIG = B_CLK_UNLOCK;
+			core_callback_clock_to_unlock();
+			
+			commonbank.R_CLOCK_CONFIG |= (device_is_able_to_repeat_clock)   ? B_CLK_REP : 0;
+			commonbank.R_CLOCK_CONFIG |= (device_is_able_to_generate_clock) ? B_CLK_GEN : 0;
+			core_callback_define_clock_default();
+		}
+		else
+		{
+			/* Configure hardware according to clock configuration */
+			/* Use core_func_start_core's input in case there was an hardware change */
+			if (device_is_able_to_repeat_clock   && (commonbank.R_CLOCK_CONFIG & B_CLK_REP)) core_callback_clock_to_repeater();
+			if (device_is_able_to_generate_clock && (commonbank.R_CLOCK_CONFIG & B_CLK_GEN)) core_callback_clock_to_generator();
+			if (commonbank.R_CLOCK_CONFIG & B_CLK_LOCK)   core_callback_clock_to_lock();
+			if (commonbank.R_CLOCK_CONFIG & B_CLK_UNLOCK) core_callback_clock_to_unlock();
+		}
+		
 		commonbank.R_RESET_DEV = B_BOOT_EE;
 		core_callback_registers_were_reinitialized();
 	}
 	else
 	{
 		commonbank.R_OPERATION_CTRL = B_OPLEDEN | B_VISUALEN | GM_OP_MODE_STANDBY;
-
+		
+		commonbank.R_CLOCK_CONFIG = B_CLK_UNLOCK;
+		core_callback_clock_to_unlock();
+		
+		commonbank.R_CLOCK_CONFIG |= (device_is_able_to_repeat_clock)   ? B_REP_ABLE : 0;
+		commonbank.R_CLOCK_CONFIG |= (device_is_able_to_generate_clock) ? B_GEN_ABLE : 0;
+		core_callback_define_clock_default();
+		
 		commonbank.R_RESET_DEV = B_BOOT_DEF;
+		
 		core_callback_reset_registers();
 		core_callback_registers_were_reinitialized();
 	}
@@ -360,7 +395,21 @@ void core_func_start_core (
 	/* Get serial number */
 	commonbank.R_SERIAL_NUMBER = eeprom_rd_byte(EEPROM_ADD_SN_HIGH);
 	commonbank.R_SERIAL_NUMBER = ((commonbank.R_SERIAL_NUMBER << 8) & 0xFF00) | eeprom_rd_byte(EEPROM_ADD_SN_LOW);
-
+	
+	/* Check if the device has hardware and is able to repeat the timestamp clock */
+	/* Needs to be checked because the EEPROM content may note refelect reality due to hardware improvements */
+	if (device_is_able_to_repeat_clock)
+		commonbank.R_CLOCK_CONFIG |= B_REP_ABLE;
+	else
+		commonbank.R_CLOCK_CONFIG &= ~B_REP_ABLE;
+	
+	/* Check if the device has hardware and is able to provide the timestamp clock */
+	/* Needs to be checked because the EEPROM content may note reflect reality due to hardware improvements */
+	if (device_is_able_to_generate_clock)
+		commonbank.R_CLOCK_CONFIG |= B_GEN_ABLE;
+	else
+		commonbank.R_CLOCK_CONFIG &= ~B_GEN_ABLE;
+	
 	/* Start 1 second timer */
 	timer_type1_enable(&TCC1, TIMER_PRESCALER_DIV1024, 31250, INT_LEVEL_LOW);
 
@@ -1050,6 +1099,10 @@ bool hwbp_read_common_reg(uint8_t add, uint8_t type)
 	/* Update R_TIMESTAMP_MICRO */
 	if (add == ADD_R_TIMESTAMP_MICRO)
 		commonbank.R_TIMESTAMP_MICRO = TCC1_CNT;
+	
+	/* Update R_CONFIG */
+	else if (add == ADD_R_TIMESTAMP_MICRO)
+		hwbp_read_common_reg_CONFIG();
 
 	/* Return success */
 	return true;
@@ -1075,6 +1128,10 @@ bool hwbp_write_common_reg(uint8_t add, uint8_t type, uint8_t * content, uint16_
 	/* R_TIMESTAMP_SECOND */
 	if (add == ADD_R_TIMESTAMP_SECOND)
 	{
+		/* Return false is register is locked */
+		if (commonbank.R_CLOCK_CONFIG & B_CLK_LOCK)
+			return false;
+		
 		/* Update register */
 		commonbank.R_TIMESTAMP_SECOND = *((uint32_t*)(content));
 
@@ -1084,9 +1141,11 @@ bool hwbp_write_common_reg(uint8_t add, uint8_t type, uint8_t * content, uint16_
 
 	/* R_OPERATION_CTRL */
 	else if (add == ADD_R_OPERATION_CTRL)
-	{
+	{		
+		uint8_t reg = *((uint8_t*)content);
+		
 		/* Disable of the OP LED? */
-		if (!(*content & B_OPLEDEN))
+		if (!(reg & B_OPLEDEN))
 		{
 			CLR_STATE_LED;
 		}
@@ -1095,19 +1154,19 @@ bool hwbp_write_common_reg(uint8_t add, uint8_t type, uint8_t * content, uint16_
 		uint8_t temp_R_OPERATION_CTRL = commonbank.R_OPERATION_CTRL;
 		
 		/* Update register */
-		commonbank.R_OPERATION_CTRL = *content & (B_ALIVE_EN | B_OPLEDEN | B_VISUALEN | B_MUTE_RPL | MSK_OP_MODE);
+		commonbank.R_OPERATION_CTRL = reg & (B_ALIVE_EN | B_OPLEDEN | B_VISUALEN | B_MUTE_RPL | MSK_OP_MODE);
 		
 		/* Verify if a transition occurs on the B_VISUALEN */
-		if ((*content & B_VISUALEN) && !(temp_R_OPERATION_CTRL & B_VISUALEN))
-			core_callback_visualen_to_on();
-		if (!(*content & B_VISUALEN) && (temp_R_OPERATION_CTRL & B_VISUALEN))
-			core_callback_visualen_to_off();
+		if ((reg & B_VISUALEN) && !(temp_R_OPERATION_CTRL & B_VISUALEN))
+		core_callback_visualen_to_on();
+		if (!(reg & B_VISUALEN) && (temp_R_OPERATION_CTRL & B_VISUALEN))
+		core_callback_visualen_to_off();
 
-		if (*content & B_DUMP)
+		if (reg & B_DUMP)
 		{
 			/* Enable the dispatch of the app registers */
 			sending_registers = true;
-			sending_register_add = 0;			
+			sending_register_add = 0;
 			sending_com_registers = true;
 			sending_com_register_add = 0;
 
@@ -1116,71 +1175,31 @@ bool hwbp_write_common_reg(uint8_t add, uint8_t type, uint8_t * content, uint16_
 		}
 
 		/* Check if the Mode changed */
-		if (((*content) & MSK_OP_MODE) == GM_OP_MODE_STANDBY && (temp_R_OPERATION_CTRL & MSK_OP_MODE) != GM_OP_MODE_STANDBY )
+		if (((reg & MSK_OP_MODE) == GM_OP_MODE_STANDBY) && ((temp_R_OPERATION_CTRL & MSK_OP_MODE) != GM_OP_MODE_STANDBY))
 		{
 			sending_registers = false;
 
 			core_callback_device_to_standby();
 		}
-		if (((*content) & MSK_OP_MODE) == GM_OP_MODE_ACTIVE && (temp_R_OPERATION_CTRL & MSK_OP_MODE) != GM_OP_MODE_ACTIVE )
-		{	
+		if (((reg & MSK_OP_MODE) == GM_OP_MODE_ACTIVE) && ((temp_R_OPERATION_CTRL & MSK_OP_MODE) != GM_OP_MODE_ACTIVE))
+		{
 			core_callback_device_to_active();
 		}
-		if (((*content) & MSK_OP_MODE) == GM_OP_MODE_SPEED && (temp_R_OPERATION_CTRL & MSK_OP_MODE) != GM_OP_MODE_SPEED )
-		{			
-			core_callback_device_to_speed();			
+		if (((reg & MSK_OP_MODE) == GM_OP_MODE_SPEED) && ((temp_R_OPERATION_CTRL & MSK_OP_MODE) != GM_OP_MODE_SPEED))
+		{
+			core_callback_device_to_speed();
 		}
 		
 		/* Return success */
 		return true;
-	}
+	}	
 
 	/* ADD_R_RESET_APP */
 	else if (add == ADD_R_RESET_DEV)
-	{		
-		/* Perform a reset to default values*/		
-		if (*content == B_RST_DEF)
-		{            
-            write_device_name_to_eeprom(default_device_name);
-            
-			eeprom_wr_byte(EEPROM_ADD_MEM_IN_USE, EEPROM_RST_USE_REGS_DEF);
-            
-			shutdown_counter = 3;
-		}
-
-		/* Perform a reset to EEPROM values*/		
-		if (*content == B_RST_EE)
-		{
-			/* Only if the device is booting from EEPROM */
-			if (eeprom_rd_byte(EEPROM_ADD_MEM_IN_USE) == EEPROM_RST_USE_REGS_EE)
-				shutdown_counter = 3;
-			else
-				return false;
-		}
-		
-		/* Save register and reset device */
-		if (*content == B_SAVE)
-		{
-			eeprom_wr_byte(EEPROM_ADD_MEM_IN_USE, EEPROM_RST_USE_REGS_EE);
-			eeprom_wr_byte(EEPROM_ADD_R_OPERATION_CTRL, commonbank.R_OPERATION_CTRL);
-
-			for (uint16_t i = 0; i < core_app_mem_size_to_save; i++)
-				eeprom_wr_byte(EEPROM_ADD_APP_REG + i, *(core_pointer_to_app_regs + i));
-
-			shutdown_counter = 3;
-		}
-        
-        /* Update device's name to default */
-        if (*content == B_NAME_TO_DEFAULT)
-        {
-            eeprom_wr_byte(EEPROM_ADD_R_DEVICE_NAME, 0xFF);
-
-            shutdown_counter = 3;
-        }
-
-		/* Return success */
-		return true;
+	{
+		return hwbp_write_common_reg_RESET_APP(content);
 	}
+	
     
     /* ADD_R_DEVICE_NAME */
     else if (add == ADD_R_DEVICE_NAME)
@@ -1220,9 +1239,173 @@ bool hwbp_write_common_reg(uint8_t add, uint8_t type, uint8_t * content, uint16_
 		/* Return success */
 		return true;
 	}
+	
+	/* R_CONFIG */
+	else if (add == ADD_R_CONFIG)
+	{
+		return hwbp_write_common_reg_CONFIG(content);
+	}
 
 	/* Return error */
 	return false;
+}
+
+
+/************************************************************************/
+/* Register RESET_APP                                                   */
+/************************************************************************/
+bool core_save_all_registers_to_eeprom(void) {
+	uint8_t reg = B_SAVE;
+	return hwbp_write_common_reg_RESET_APP(&reg);
+}
+
+bool hwbp_write_common_reg_RESET_APP(void *a)
+{
+	uint8_t reg = *((uint8_t*)a);
+	
+	/* Perform a reset to default values*/
+	if (reg == B_RST_DEF)
+	{
+		write_device_name_to_eeprom(default_device_name);
+		
+		eeprom_wr_byte(EEPROM_ADD_MEM_IN_USE, EEPROM_RST_USE_REGS_DEF);
+		
+		shutdown_counter = 3;
+	}
+
+	/* Perform a reset to EEPROM values*/
+	if (reg == B_RST_EE)
+	{
+		/* Only if the device is booting from EEPROM */
+		if (eeprom_rd_byte(EEPROM_ADD_MEM_IN_USE) == EEPROM_RST_USE_REGS_EE)
+		shutdown_counter = 3;
+		else
+		return false;
+	}
+	
+	/* Save register and reset device */
+	if (reg == B_SAVE)
+	{
+		eeprom_wr_byte(EEPROM_ADD_MEM_IN_USE, EEPROM_RST_USE_REGS_EE);
+		eeprom_wr_byte(EEPROM_ADD_R_OPERATION_CTRL, commonbank.R_OPERATION_CTRL);
+		eeprom_wr_byte(EEPROM_ADD_CLOCK_CONFIG, commonbank.R_CLOCK_CONFIG);
+
+		for (uint16_t i = 0; i < core_app_mem_size_to_save; i++)
+		eeprom_wr_byte(EEPROM_ADD_APP_REG + i, *(core_pointer_to_app_regs + i));
+
+		shutdown_counter = 3;
+	}
+	
+	/* Update device's name to default */
+	if (reg == B_NAME_TO_DEFAULT)
+	{
+		eeprom_wr_byte(EEPROM_ADD_R_DEVICE_NAME, 0xFF);
+
+		shutdown_counter = 3;
+	}
+
+	/* Return success */
+	return true;
+}
+
+/************************************************************************/
+/* Register CONFIG                                                      */
+/************************************************************************/
+bool core_bool_device_is_repeater(void) {
+	return (commonbank.R_CLOCK_CONFIG & B_CLK_REP) ? true : false;
+}
+
+bool core_bool_device_is_generator(void) {
+	return (commonbank.R_CLOCK_CONFIG & B_CLK_GEN) ? true : false;
+}
+
+bool core_bool_clock_is_locked(void) {
+	return (commonbank.R_CLOCK_CONFIG & B_CLK_LOCK) ? true : false;
+}
+
+bool core_device_to_clock_repeater(void) {
+	uint8_t reg = B_CLK_REP;
+	return hwbp_write_common_reg_CONFIG(&reg);
+}
+
+bool core_device_to_clock_generator(void) {
+	uint8_t reg = B_CLK_GEN;
+	return hwbp_write_common_reg_CONFIG(&reg);
+}
+
+bool core_clock_to_lock(void) {
+	uint8_t reg = B_CLK_LOCK;
+	return hwbp_write_common_reg_CONFIG(&reg);
+}
+
+bool core_clock_to_unlock(void) {
+	uint8_t reg = B_CLK_UNLOCK;
+	return hwbp_write_common_reg_CONFIG(&reg);
+}
+
+void hwbp_read_common_reg_CONFIG(void) {}
+
+bool hwbp_write_common_reg_CONFIG(void *a)
+{
+	uint8_t reg = *((uint8_t*)a);
+	
+	/* Return false if the device is not able to repeat the timestamp clock */
+	if (reg & B_CLK_REP)
+		if ((commonbank.R_CLOCK_CONFIG & B_REP_ABLE) == false)
+			return false;
+
+	/* Return false if the device is not able to generate the timestamp clock */
+	if (reg & B_CLK_GEN)
+		if ((commonbank.R_CLOCK_CONFIG & B_GEN_ABLE) == false)
+		return false;
+
+	/* Return false if trying to lock a device acting as a repeater */
+	if (reg & B_CLK_LOCK)
+		if ((commonbank.R_CLOCK_CONFIG & B_CLK_REP) == true)
+			return false;
+
+	/* Configure device to repeater if the device wasn't a repeater */
+	if ((reg & B_CLK_REP) && ((commonbank.R_CLOCK_CONFIG & B_CLK_REP) == false))
+	{
+		commonbank.R_CLOCK_CONFIG &= ~B_CLK_GEN;			// Clear CLK_GEN bit
+		commonbank.R_CLOCK_CONFIG |=  B_CLK_REP;			// Set CLK_REP bit
+		core_callback_clock_to_repeater();
+	
+		/* Removes the timestamp lock if the device is locked */
+		if (commonbank.R_CLOCK_CONFIG & B_CLK_LOCK)
+		{
+			commonbank.R_CLOCK_CONFIG &= ~B_CLK_LOCK;		// Clear LOCK bit because the device is a repeater
+			commonbank.R_CLOCK_CONFIG |=  B_CLK_UNLOCK;		// Set UNLOCK bit
+			core_callback_clock_to_unlock();
+		}
+	}
+
+	/* Configure device to generator if the device wasn't a generator */
+	if ((reg & B_CLK_GEN) && ((commonbank.R_CLOCK_CONFIG & B_CLK_GEN) == false))
+	{
+		commonbank.R_CLOCK_CONFIG |=  B_CLK_GEN;			// Set CLK_GEN bit
+		commonbank.R_CLOCK_CONFIG &= ~B_CLK_REP;			// Clear CLK_REP bit
+		core_callback_clock_to_generator();
+	}
+
+	/* Unlock timestamp if was locked */
+	if ((reg & B_CLK_UNLOCK) && ((commonbank.R_CLOCK_CONFIG & B_CLK_UNLOCK) == false))
+	{
+		commonbank.R_CLOCK_CONFIG &= ~B_CLK_LOCK;			// Clear LOCK bit
+		commonbank.R_CLOCK_CONFIG |=  B_CLK_UNLOCK;			// Set UNLOCK bit
+		core_callback_clock_to_unlock();
+	}
+
+	/* Lock timestamp if was unlocked */
+	if ((reg & B_CLK_LOCK) && ((commonbank.R_CLOCK_CONFIG & B_CLK_LOCK) == false))
+	{
+		commonbank.R_CLOCK_CONFIG |=  B_CLK_LOCK;			// Set LOCK bit
+		commonbank.R_CLOCK_CONFIG &= ~B_CLK_UNLOCK;			// Clear UNLOCK bit
+		core_callback_clock_to_lock();
+	}
+	
+	/* Return success */
+	return true;
 }
 
 
