@@ -142,6 +142,8 @@ void timer_type1_wait(TC1_t* timer, uint8_t prescaler, uint16_t target_count);
 /************************************************************************/
 /* EEPROM                                                               */
 /************************************************************************/
+bool eeprom_is_busy(void);
+
 uint8_t eeprom_rd_byte(uint16_t addr);
 void eeprom_wr_byte(uint16_t addr, uint8_t byte);
 

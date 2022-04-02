@@ -405,6 +405,11 @@ void timer_type1_wait(TC1_t* timer, uint8_t prescaler, uint16_t target_count) {
 /************************************************************************/
 /* EEPROM                                                               */
 /************************************************************************/
+bool eeprm_is_busy(void)
+{
+	return (NVM_STATUS & NVM_NVMBUSY_bm) ? true : false;
+}
+
 uint8_t eeprom_rd_byte(uint16_t addr)
 {
 	while(NVM_STATUS & NVM_NVMBUSY_bm);
