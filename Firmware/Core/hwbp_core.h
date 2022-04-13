@@ -88,9 +88,9 @@ bool hwbp_write_common_reg_CONFIG(void *a);
 void hwbp_read_common_reg_CONFIG(void);
 
 // Called when the application should configure the hardware to repeat the harp timestamp clock input.
-bool core_callback_clock_to_repeater(void);
+void core_callback_clock_to_repeater(void);
 // Called when the application should configure the hardware to generate the harp timestamp clock.
-bool core_callback_clock_to_generator(void);
+void core_callback_clock_to_generator(void);
 // Called when the timestamp lock is changed to unlocked.
 void core_callback_clock_to_unlock(void);
 // Called when the timestamp lock is changed to locked.
