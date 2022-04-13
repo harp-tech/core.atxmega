@@ -1367,9 +1367,11 @@ bool hwbp_write_common_reg_CONFIG(void *a)
 	/* Configure device to repeater if the device wasn't a repeater */
 	if ((reg & B_CLK_REP) && ((commonbank.R_CLOCK_CONFIG & B_CLK_REP) == false))
 	{
+		if (!core_callback_clock_to_repeater())
+			return false;
+		
 		commonbank.R_CLOCK_CONFIG &= ~B_CLK_GEN;			// Clear CLK_GEN bit
 		commonbank.R_CLOCK_CONFIG |=  B_CLK_REP;			// Set CLK_REP bit
-		core_callback_clock_to_repeater();
 	
 		/* Removes the timestamp lock if the device is locked */
 		if (commonbank.R_CLOCK_CONFIG & B_CLK_LOCK)
@@ -1383,9 +1385,11 @@ bool hwbp_write_common_reg_CONFIG(void *a)
 	/* Configure device to generator if the device wasn't a generator */
 	if ((reg & B_CLK_GEN) && ((commonbank.R_CLOCK_CONFIG & B_CLK_GEN) == false))
 	{
+		if (!core_callback_clock_to_generator())
+			return false;
+		
 		commonbank.R_CLOCK_CONFIG |=  B_CLK_GEN;			// Set CLK_GEN bit
-		commonbank.R_CLOCK_CONFIG &= ~B_CLK_REP;			// Clear CLK_REP bit
-		core_callback_clock_to_generator();
+		commonbank.R_CLOCK_CONFIG &= ~B_CLK_REP;			// Clear CLK_REP bit		
 	}
 
 	/* Unlock timestamp if was locked */
