@@ -79,7 +79,7 @@ void hwbp_com_uart_disable(void)
 /************************************************************************/
 HWBP_UART_TX_ROUTINE_
 {
-	core_callback_uart_tx_before_exec();
+	//core_callback_uart_tx_before_exec();
 
 	HWBP_UART_UART.DATA = txbuff_hwbp_uart[hwbp_uart_tail++];
 	if (hwbp_uart_tail == HWBP_UART_TXBUFSIZ)
@@ -89,7 +89,7 @@ HWBP_UART_TX_ROUTINE_
 	if (hwbp_uart_head == hwbp_uart_tail)
 		HWBP_UART_UART.CTRLA &= ~(USART_DREINTLVL_OFF_gc | USART_DREINTLVL_gm);
 	
-	core_callback_uart_tx_after_exec();
+	//core_callback_uart_tx_after_exec();
 	hwbp_uart_leave_interrupt;
 }
 
@@ -98,7 +98,7 @@ HWBP_UART_TX_ROUTINE_
 /************************************************************************/
 HWBP_UART_CTS_ROUTINE_
 {	
-	core_callback_uart_cts_before_exec();
+	//core_callback_uart_cts_before_exec();
 
 	if (HWBP_UART_CTS_PORT.IN & (1 << HWBP_UART_CTS_pin) )
 		/* Disable uart interrupt until RTS is logic low */
@@ -108,7 +108,7 @@ HWBP_UART_CTS_ROUTINE_
 			/* If the buffer is not empty, enable Tx interrupt */
 			HWBP_UART_UART.CTRLA |= HWBP_UART_TX_INT_LEVEL;
 
-	core_callback_uart_cts_after_exec();
+	//core_callback_uart_cts_after_exec();
 	hwbp_uart_leave_interrupt;
 }
 
@@ -201,7 +201,7 @@ bool hwbp_uart_rcv_now(uint8_t * byte)
 HWBP_UART_RX_ROUTINE_
 {
 	uint8_t chr;
-	core_callback_uart_rx_before_exec();
+	//core_callback_uart_rx_before_exec();
 	chr = HWBP_UART_UART.DATA;
 	
 	rxbuff_hwbp_uart[hwbp_uart_rx_pointer++] = chr;
@@ -259,6 +259,6 @@ HWBP_UART_RX_ROUTINE_
 		rx_cmd_ready = true;
 	}
 	
-	core_callback_uart_rx_after_exec();
+	//core_callback_uart_rx_after_exec();
 	hwbp_uart_leave_interrupt;
 }
