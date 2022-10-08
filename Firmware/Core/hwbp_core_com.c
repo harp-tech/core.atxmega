@@ -222,7 +222,7 @@ HWBP_UART_RX_ROUTINE_
 			else
 				rx_timeout = RX_TIMEOUT_MS;
 		}
-		
+
 		else if (hwbp_uart_rx_pointer_buff1 == 4)
 		{
 			if (rxbuff_hwbp_uart_buff1[1] != 255)
@@ -283,13 +283,7 @@ HWBP_UART_RX_ROUTINE_
 			else
 				rx_timeout = RX_TIMEOUT_MS;
 		}
-
-	// 	else if (hwbp_uart_rx_pointer == 3)
-	// 	{
-	// 		if(rx_cmd_ready)
-	// 			core_func_catastrophic_error_detected();
-	// 	}
-	
+			
 		else if (hwbp_uart_rx_pointer_buff2 == 4)
 		{
 			if (rxbuff_hwbp_uart_buff2[1] != 255)
