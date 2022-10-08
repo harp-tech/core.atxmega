@@ -6,15 +6,17 @@
 /************************************************************************/
 uint8_t com_mode = COM_MODE_UART;	// Reflects the actual mode (UART or USB)
 uint8_t rx_timeout = 0;					// Countdown for timeout
-bool rx_cmd_ready = false;				// True when a command is available on rxbuff_hwbp_uart or rxbuff_hwbp_usb
-uint16_t cmd_len;							// Contains the "len" of the command
+uint8_t rx_cmd_ready = 0;				// Contains the buffer index of the available command on rxbuff_hwbp_uart_buffX or rxbuff_hwbp_usbX
+uint8_t cmd_len_buff1;					// Contains the "len" of the command available on buffer 1
+uint8_t cmd_len_buff2;					// Contains the "len" of the command available on buffer 2
 
 
 /************************************************************************/
 /* Buffers and pointers                                                 */
 /************************************************************************/
 uint8_t txbuff_hwbp_uart[HWBP_UART_TXBUFSIZ];
-uint8_t rxbuff_hwbp_uart[HWBP_UART_RXBUFSIZ];
+uint8_t rxbuff_hwbp_uart_buff1[HWBP_UART_RXBUFSIZ];
+uint8_t rxbuff_hwbp_uart_buff2[HWBP_UART_RXBUFSIZ];
 
 #if HWBP_UART_TXBUFSIZ >= 256
 	uint16_t hwbp_uart_tail = 0;
@@ -24,12 +26,15 @@ uint8_t rxbuff_hwbp_uart[HWBP_UART_RXBUFSIZ];
 	uint8_t hwbp_uart_head = 0;
 #endif
 
-	uint16_t hwbp_uart_rx_pointer = 0;
 #if HWBP_UART_RXBUFSIZ >= 256
+	uint16_t hwbp_uart_rx_pointer_buff1 = 0;
+	uint16_t hwbp_uart_rx_pointer_buff2 = 0;
 #else
-	uint8_t hwbp_uart_rx_pointer = 0;
+	uint8_t hwbp_uart_rx_pointer_buff1 = 0;
+	uint8_t hwbp_uart_rx_pointer_buff2 = 0;
 #endif
-	
+
+bool receiving_on_buff1 = true;
 
 	
 /************************************************************************/
@@ -198,65 +203,139 @@ bool hwbp_uart_rcv_now(uint8_t * byte)
 	return false;
 }
 
+extern void core_func_catastrophic_error_detected(void);
+
 HWBP_UART_RX_ROUTINE_
 {
 	uint8_t chr;
 	//core_callback_uart_rx_before_exec();
 	chr = HWBP_UART_UART.DATA;
 	
-	rxbuff_hwbp_uart[hwbp_uart_rx_pointer++] = chr;
-
-	if (hwbp_uart_rx_pointer == 1)
+	if (receiving_on_buff1)
 	{
-		if (rxbuff_hwbp_uart[0] != 0x02 && rxbuff_hwbp_uart[0] != 0x01)
-			hwbp_uart_rx_pointer = 0;
-		else
-			rx_timeout = RX_TIMEOUT_MS;
-	}
+		rxbuff_hwbp_uart_buff1[hwbp_uart_rx_pointer_buff1++] = chr;
 
-	else if (hwbp_uart_rx_pointer == 4)
-	{
-		if (rxbuff_hwbp_uart[1] != 255)
+		if (hwbp_uart_rx_pointer_buff1 == 1)
 		{
-			if(rxbuff_hwbp_uart[1] + 2 < HWBP_UART_RXBUFSIZ)
-				cmd_len = rxbuff_hwbp_uart[1] + 2;
+			if (rxbuff_hwbp_uart_buff1[0] != 0x02 && rxbuff_hwbp_uart_buff1[0] != 0x01)
+				hwbp_uart_rx_pointer_buff1 = 0;
 			else
-				hwbp_uart_rx_pointer = 0;
+				rx_timeout = RX_TIMEOUT_MS;
 		}
-		else
-		{
-			if (*((uint16_t*)(rxbuff_hwbp_uart+1)) + 4 < HWBP_UART_RXBUFSIZ)
-				cmd_len = *((uint16_t*)(rxbuff_hwbp_uart+2)) + 4;
-			else
-				hwbp_uart_rx_pointer = 0;
-		}
-	}
-
-	else if (hwbp_uart_rx_pointer == cmd_len)
-	{
-		/* Make sure that UART or USB interrupts will not
-		update rx buffers until command is processed */
-		if (com_mode == COM_MODE_UART)
-		{
-			/* Disable rx external hardware */
-			disable_hwbp_uart_rx;
-
-			/* Disable high level interrupts */
-			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
-			
-			/* Disable USART RX */
-			HWBP_UART_UART.CTRLA &= ~(USART_RXCINTLVL_gm);
-
-			/* Re-enable high level interrupts */
-			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
-		}
-
-		/* Remove "header" and "len" from cmd_len */
-		cmd_len -= (rxbuff_hwbp_uart[1] != 255) ? 2 : 4;
 		
-		hwbp_uart_rx_pointer = 0;
+		else if (hwbp_uart_rx_pointer_buff1 == 4)
+		{
+			if (rxbuff_hwbp_uart_buff1[1] != 255)
+			{
+				if(rxbuff_hwbp_uart_buff1[1] + 2 < HWBP_UART_RXBUFSIZ)
+					cmd_len_buff1 = rxbuff_hwbp_uart_buff1[1] + 2;
+				else
+					hwbp_uart_rx_pointer_buff1 = 0;
+			}
+			else
+			{
+				if (*((uint16_t*)(rxbuff_hwbp_uart_buff1+1)) + 4 < HWBP_UART_RXBUFSIZ)
+					cmd_len_buff1 = *((uint16_t*)(rxbuff_hwbp_uart_buff1+2)) + 4;
+				else
+					hwbp_uart_rx_pointer_buff1 = 0;
+			}
+		}
 
-		rx_cmd_ready = true;
+		else if (hwbp_uart_rx_pointer_buff1 == cmd_len_buff1)
+		{
+			/* Make sure that UART or USB interrupts will not
+			update rx buffers until command is processed */
+			if (com_mode == COM_MODE_UART)
+			{
+				/* Disable rx external hardware */
+				disable_hwbp_uart_rx;
+
+	 			/* Disable high level interrupts */
+	 			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
+	 			
+	 			/* Disable USART RX */
+	 			HWBP_UART_UART.CTRLA &= ~(USART_RXCINTLVL_gm);
+	 
+	 			/* Re-enable high level interrupts */
+	 			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
+			}
+
+			/* Remove "header" and "len" from cmd_len */
+			cmd_len_buff1 -= (rxbuff_hwbp_uart_buff1[1] != 255) ? 2 : 4;
+		
+			hwbp_uart_rx_pointer_buff1 = 0;
+
+			rx_cmd_ready = 1;	// Ready on buffer1
+			rx_timeout = 0;
+			receiving_on_buff1 = false;
+		}
+	}
+	
+	else
+	
+	{
+		rxbuff_hwbp_uart_buff2[hwbp_uart_rx_pointer_buff2++] = chr;
+
+		if (hwbp_uart_rx_pointer_buff2 == 1)
+		{
+			if (rxbuff_hwbp_uart_buff2[0] != 0x02 && rxbuff_hwbp_uart_buff2[0] != 0x01)
+				hwbp_uart_rx_pointer_buff2 = 0;
+			else
+				rx_timeout = RX_TIMEOUT_MS;
+		}
+
+	// 	else if (hwbp_uart_rx_pointer == 3)
+	// 	{
+	// 		if(rx_cmd_ready)
+	// 			core_func_catastrophic_error_detected();
+	// 	}
+	
+		else if (hwbp_uart_rx_pointer_buff2 == 4)
+		{
+			if (rxbuff_hwbp_uart_buff2[1] != 255)
+			{
+				if(rxbuff_hwbp_uart_buff2[1] + 2 < HWBP_UART_RXBUFSIZ)
+					cmd_len_buff2 = rxbuff_hwbp_uart_buff2[1] + 2;
+				else
+					hwbp_uart_rx_pointer_buff2 = 0;
+			}
+			else
+			{
+				if (*((uint16_t*)(rxbuff_hwbp_uart_buff2+1)) + 4 < HWBP_UART_RXBUFSIZ)
+					cmd_len_buff2 = *((uint16_t*)(rxbuff_hwbp_uart_buff2+2)) + 4;
+				else
+					hwbp_uart_rx_pointer_buff2 = 0;
+			}
+		}
+
+		else if (hwbp_uart_rx_pointer_buff2 == cmd_len_buff2)
+		{
+			/* Make sure that UART or USB interrupts will not
+			update rx buffers until command is processed */
+			if (com_mode == COM_MODE_UART)
+			{
+				/* Disable rx external hardware */
+				disable_hwbp_uart_rx;
+
+	 			/* Disable high level interrupts */
+	 			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
+	 			
+	 			/* Disable USART RX */
+	 			HWBP_UART_UART.CTRLA &= ~(USART_RXCINTLVL_gm);
+	 
+	 			/* Re-enable high level interrupts */
+	 			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
+			}
+
+			/* Remove "header" and "len" from cmd_len */
+			cmd_len_buff2 -= (rxbuff_hwbp_uart_buff2[1] != 255) ? 2 : 4;
+		
+			hwbp_uart_rx_pointer_buff2 = 0;
+
+			rx_cmd_ready = 2;	// Ready on buffer2
+			rx_timeout = 0;
+			receiving_on_buff1 = true;
+		}
 	}
 	
 	//core_callback_uart_rx_after_exec();

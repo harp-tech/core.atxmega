@@ -39,14 +39,18 @@ uint8_t reply_buff[MAX_PACKET_SIZE];
 /************************************************************************/
 extern uint8_t com_mode;
 extern uint8_t rx_timeout;
-extern bool rx_cmd_ready;
-extern uint16_t cmd_len;
+extern uint8_t rx_cmd_ready;
+extern uint8_t cmd_len_buff1;
+extern uint8_t cmd_len_buff2;
 
-extern uint8_t rxbuff_hwbp_uart[];
-	extern uint16_t hwbp_uart_rx_pointer;
+extern uint8_t rxbuff_hwbp_uart_buff1[];
+extern uint8_t rxbuff_hwbp_uart_buff2[];
 #if HWBP_UART_RXBUFSIZ >= 256
+	extern uint16_t hwbp_uart_rx_pointer_buff1;
+	extern uint16_t hwbp_uart_rx_pointer_buff2;
 #else
-	extern uint8_t hwbp_uart_rx_pointer;
+	extern uint8_t hwbp_uart_rx_pointer_buff1;
+	extern uint8_t hwbp_uart_rx_pointer_buff2;
 #endif
 
 extern uint8_t rxbuff_hwbp_usb[];
@@ -555,9 +559,10 @@ ISR(TCC1_CCA_vect, ISR_NAKED)
 			if (--rx_timeout == 0)
 			{
 				rx_timeout = 0;
-				rx_cmd_ready = false;
+				rx_cmd_ready = 0;
 
-				hwbp_uart_rx_pointer = 0;
+				hwbp_uart_rx_pointer_buff1 = 0;
+				hwbp_uart_rx_pointer_buff2 = 0;
 				//hwbp_usb_rx_pointer = 0;
 			}
 		}		
@@ -565,9 +570,16 @@ ISR(TCC1_CCA_vect, ISR_NAKED)
 		/* Check if a command is ready to execute */
 		if (rx_cmd_ready)
 		{
-			parse_and_reply(rxbuff_hwbp_uart, cmd_len);
-
-			rx_cmd_ready = false;
+			if (rx_cmd_ready == 1)
+			{
+				parse_and_reply(rxbuff_hwbp_uart_buff1, cmd_len_buff1);
+			}
+			else
+			{
+				parse_and_reply(rxbuff_hwbp_uart_buff2, cmd_len_buff2);
+			}
+			
+			rx_cmd_ready = 0;
 		}
         
         
@@ -685,8 +697,8 @@ static void parse_and_reply(uint8_t * packet_p, uint16_t len)
 	
 	/* Check checksum */
 	uint8_t checksum;
-	check_checksum(packet_p, cmd_len+1, checksum);
-	if (packet_p[cmd_len+1] != checksum)
+	check_checksum(packet_p, len+1, checksum);
+	if (packet_p[len+1] != checksum)
 		return;
 
 	/* Check port */
