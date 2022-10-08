@@ -43,8 +43,8 @@ extern bool rx_cmd_ready;
 extern uint16_t cmd_len;
 
 extern uint8_t rxbuff_hwbp_uart[];
-#if HWBP_UART_RXBUFSIZ > 256
 	extern uint16_t hwbp_uart_rx_pointer;
+#if HWBP_UART_RXBUFSIZ >= 256
 #else
 	extern uint8_t hwbp_uart_rx_pointer;
 #endif

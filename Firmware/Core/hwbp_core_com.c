@@ -16,7 +16,7 @@ uint16_t cmd_len;							// Contains the "len" of the command
 uint8_t txbuff_hwbp_uart[HWBP_UART_TXBUFSIZ];
 uint8_t rxbuff_hwbp_uart[HWBP_UART_RXBUFSIZ];
 
-#if HWBP_UART_TXBUFSIZ > 256
+#if HWBP_UART_TXBUFSIZ >= 256
 	uint16_t hwbp_uart_tail = 0;
 	uint16_t hwbp_uart_head = 0;
 #else
@@ -24,8 +24,8 @@ uint8_t rxbuff_hwbp_uart[HWBP_UART_RXBUFSIZ];
 	uint8_t hwbp_uart_head = 0;
 #endif
 
-#if HWBP_UART_RXBUFSIZ > 256
 	uint16_t hwbp_uart_rx_pointer = 0;
+#if HWBP_UART_RXBUFSIZ >= 256
 #else
 	uint8_t hwbp_uart_rx_pointer = 0;
 #endif
