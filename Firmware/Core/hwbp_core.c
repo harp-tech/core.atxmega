@@ -543,14 +543,14 @@ ISR(TCC1_CCA_vect, ISR_NAKED)
 			/* Disable rx external hardware */
 			disable_hwbp_uart_rx;
 
-			/* Disable high level interrupts */
-			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
-			
-			/* Disable USART RX */
-			HWBP_UART_UART.CTRLA &= ~(USART_RXCINTLVL_gm);
-
-			/* Re-enable high level interrupts */
-			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
+// 			/* Disable high level interrupts */
+// 			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
+// 			
+// 			/* Disable USART RX */
+// 			HWBP_UART_UART.CTRLA &= ~(USART_RXCINTLVL_gm);
+// 
+// 			/* Re-enable high level interrupts */
+// 			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
 		}
 		
 		/* Check timeout and, if happens, reset pointers  */
@@ -618,14 +618,14 @@ ISR(TCC1_CCA_vect, ISR_NAKED)
 		
 		if (com_mode == COM_MODE_UART)
 		{
-			/* Disable high level interrupts */
-			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
-
-			/* Enable USART RX */
-			HWBP_UART_UART.CTRLA |= (HWBP_UART_RX_INT_LEVEL<< 4);
-
-			/* Re-enable high level interrupts */
-			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
+// 			/* Disable high level interrupts */
+// 			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
+// 
+// 			/* Enable USART RX */
+// 			HWBP_UART_UART.CTRLA |= (HWBP_UART_RX_INT_LEVEL<< 4);
+// 
+// 			/* Re-enable high level interrupts */
+// 			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
 
 			/* Enable rx external hardware */
 			enable_hwbp_uart_rx;

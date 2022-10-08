@@ -250,14 +250,14 @@ HWBP_UART_RX_ROUTINE_
 				/* Disable rx external hardware */
 				disable_hwbp_uart_rx;
 
-	 			/* Disable high level interrupts */
-	 			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
-	 			
-	 			/* Disable USART RX */
-	 			HWBP_UART_UART.CTRLA &= ~(USART_RXCINTLVL_gm);
-	 
-	 			/* Re-enable high level interrupts */
-	 			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
+	// 			/* Disable high level interrupts */
+	// 			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
+	// 			
+	// 			/* Disable USART RX */
+	// 			HWBP_UART_UART.CTRLA &= ~(USART_RXCINTLVL_gm);
+	// 
+	// 			/* Re-enable high level interrupts */
+	// 			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
 			}
 
 			/* Remove "header" and "len" from cmd_len */
@@ -311,14 +311,14 @@ HWBP_UART_RX_ROUTINE_
 				/* Disable rx external hardware */
 				disable_hwbp_uart_rx;
 
-	 			/* Disable high level interrupts */
-	 			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
-	 			
-	 			/* Disable USART RX */
-	 			HWBP_UART_UART.CTRLA &= ~(USART_RXCINTLVL_gm);
-	 
-	 			/* Re-enable high level interrupts */
-	 			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
+	// 			/* Disable high level interrupts */
+	// 			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
+	// 			
+	// 			/* Disable USART RX */
+	// 			HWBP_UART_UART.CTRLA &= ~(USART_RXCINTLVL_gm);
+	// 
+	// 			/* Re-enable high level interrupts */
+	// 			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
 			}
 
 			/* Remove "header" and "len" from cmd_len */
