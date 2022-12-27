@@ -41,7 +41,7 @@ On the Harp devices, two packages are being used: 44 and 100 pins. The main adva
 
 #### Connections for the 44 pins version (using ATxmega128A4U)
 
-![CoreLibrary](Documents/ImagesAndPics/44_Pins_Connection_Diagram.jpg)
+![CoreLibrary](Assets/44_Pins_Connection_Diagram.jpg)
 
 **Note:** It's recommended a good 32 MHz clock source, like the MEMS Oscillator DSC1001CI5-032.0000T from [Microchip](http://www.microchip.com/) that can be found on [Mouser](www.mouser.com) or [Digi-Key](http://www.digikey.com/).
 
