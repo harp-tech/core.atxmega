@@ -1,0 +1,218 @@
+################################################################################
+# Makefile for Harp CoreLibrary.Atxmega
+################################################################################
+
+SHELL := cmd.exe
+RM := rm -rf
+
+USER_OBJS :=
+
+LIBS := 
+PROJ := 
+
+O_SRCS := 
+C_SRCS := 
+S_SRCS := 
+S_UPPER_SRCS := 
+OBJ_SRCS := 
+ASM_SRCS := 
+PREPROCESSING_SRCS := 
+OBJS := 
+OBJS_AS_ARGS := 
+C_DEPS := 
+C_DEPS_AS_ARGS := 
+EXECUTABLES := 
+OUTPUT_FILE_PATH_0 :=
+OUTPUT_FILE_PATH_AS_ARGS_0 :=
+OUTPUT_FILE_PATH_1 :=
+OUTPUT_FILE_PATH_AS_ARGS_1 :=
+OUTPUT_FILE_PATH_2 :=
+OUTPUT_FILE_PATH_AS_ARGS_2 :=
+OUTPUT_FILE_PATH_3 :=
+OUTPUT_FILE_PATH_AS_ARGS_3 :=
+OUTPUT_FILE_PATH_4 :=
+OUTPUT_FILE_PATH_AS_ARGS_4 :=
+AVR_APP_PATH :=$$$AVR_APP_PATH$$$
+QUOTE := "
+ADDITIONAL_DEPENDENCIES:=
+OUTPUT_FILE_DEP:=
+LIB_DEP:=
+LINKER_SCRIPT_DEP:=
+
+# Every subdirectory with source files must be described here
+SUBDIRS := 
+
+
+# Add inputs and outputs from these tool invocations to the build variables 
+C_SRCS +=  \
+../cpu.c \
+../hwbp_core.c \
+../hwbp_core_com.c
+
+
+PREPROCESSING_SRCS += 
+
+
+ASM_SRCS += 
+
+
+OBJS +=  \
+cpu.o \
+hwbp_core.o \
+hwbp_core_com.o \
+hwbp_sync.o
+
+OBJS_1 +=  \
+1_cpu.o \
+1_hwbp_core.o \
+1_hwbp_core_com.o \
+1_hwbp_sync.o
+
+OBJS_AS_ARGS +=  \
+cpu.o \
+hwbp_core.o \
+hwbp_core_com.o \
+hwbp_sync.o
+
+C_DEPS +=  \
+cpu.d \
+hwbp_core.d \
+hwbp_core_com.d \
+hwbp_sync.d
+
+C_DEPS_AS_ARGS +=  \
+cpu.d \
+hwbp_core.d \
+hwbp_core_com.d \
+hwbp_sync.d
+
+
+ADDITIONAL_DEPENDENCIES:=
+
+OUTPUT_FILE_DEP:= ./CoreMakedep.mk
+OUTPUT_FILE_DEP_1:= ./CoreMakedep1.mk
+
+LIB_DEP+= 
+
+LINKER_SCRIPT_DEP+= 
+
+
+# AVR32/GNU C Compiler
+
+MCU_0="atxmega32a4u"
+MCU_1="atxmega64a4u"
+MCU_2="atxmega128a4u"
+MCU_3="atxmega128a1u"
+MCU_4="atxmega16a4u"
+
+OUTPUT_FILE_PATH_0 +=libATxmega32A4U-1.11.a
+OUTPUT_FILE_PATH_1 +=libATxmega64A4U-1.11.a
+OUTPUT_FILE_PATH_2 +=libATxmega128A4U-1.11.a
+OUTPUT_FILE_PATH_3 +=libATxmega128A1U-1.11.a
+OUTPUT_FILE_PATH_4 +=libATxmega16A4U_ClockSync-1.11.a
+
+OUTPUT_FILE_PATH_AS_ARGS_0 +=libATxmega32A4U-1.11.a
+OUTPUT_FILE_PATH_AS_ARGS_1 +=libATxmega64A4U-1.11.a
+OUTPUT_FILE_PATH_AS_ARGS_2 +=libATxmega128A4U-1.11.a
+OUTPUT_FILE_PATH_AS_ARGS_3 +=libATxmega128A1U-1.11.a
+OUTPUT_FILE_PATH_AS_ARGS_4 +=libATxmega16A4U_ClockSync-1.11.a
+
+
+################################################################################
+# Create .o
+################################################################################
+./cpu.o: .././cpu.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 4.8.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_0)" -c -std=gnu99 -MD -MP -MF "0_cpu.d"       -MT"0_cpu.d"       -MT"0_cpu.o"         -o "0_cpu.o"       ".././cpu.c"
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_1)" -c -std=gnu99 -MD -MP -MF "1_cpu.d"       -MT"1_cpu.d"       -MT"1_cpu.o"         -o "1_cpu.o"       ".././cpu.c"
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_2)" -c -std=gnu99 -MD -MP -MF "2_cpu.d"       -MT"2_cpu.d"       -MT"2_cpu.o"         -o "2_cpu.o"       ".././cpu.c"
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_3)" -c -std=gnu99 -MD -MP -MF "3_cpu.d"       -MT"3_cpu.d"       -MT"3_cpu.o"         -o "3_cpu.o"       ".././cpu.c"
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_4)" -c -std=gnu99 -MD -MP -MF "4_cpu.d"       -MT"4_cpu.d"       -MT"4_cpu.o"         -o "4_cpu.o"       ".././cpu.c"
+	@echo Finished building: $<
+	
+./hwbp_core.o: .././hwbp_core.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 4.8.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_0)" -c -std=gnu99 -MD -MP -MF "0_hwbp_core.d"     -MT"0_hwbp_core.d"     -MT"0_hwbp_core.o"       -o "0_hwbp_core.o"     ".././hwbp_core.c"
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_1)" -c -std=gnu99 -MD -MP -MF "1_hwbp_core.d"     -MT"1_hwbp_core.d"     -MT"1_hwbp_core.o"       -o "1_hwbp_core.o"     ".././hwbp_core.c"
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_2)" -c -std=gnu99 -MD -MP -MF "2_hwbp_core.d"     -MT"2_hwbp_core.d"     -MT"2_hwbp_core.o"       -o "2_hwbp_core.o"     ".././hwbp_core.c"
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_3)" -c -std=gnu99 -MD -MP -MF "3_hwbp_core.d"     -MT"3_hwbp_core.d"     -MT"3_hwbp_core.o"       -o "3_hwbp_core.o"     ".././hwbp_core.c"
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_4)" -c -std=gnu99 -MD -MP -MF "4_hwbp_core.d"     -MT"4_hwbp_core.d"     -MT"4_hwbp_core.o"       -o "4_hwbp_core.o"     ".././hwbp_core.c"
+	@echo Finished building: $<
+
+./hwbp_core_com.o: .././hwbp_core_com.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 4.8.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_0)" -c -std=gnu99 -MD -MP -MF "0_hwbp_core_com.d" -MT"0_hwbp_core_com.d" -MT"0_hwbp_core_com.o"   -o "0_hwbp_core_com.o" ".././hwbp_core_com.c"
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_1)" -c -std=gnu99 -MD -MP -MF "1_hwbp_core_com.d" -MT"1_hwbp_core_com.d" -MT"1_hwbp_core_com.o"   -o "1_hwbp_core_com.o" ".././hwbp_core_com.c"	
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_2)" -c -std=gnu99 -MD -MP -MF "2_hwbp_core_com.d" -MT"2_hwbp_core_com.d" -MT"2_hwbp_core_com.o"   -o "2_hwbp_core_com.o" ".././hwbp_core_com.c"	
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_3)" -c -std=gnu99 -MD -MP -MF "3_hwbp_core_com.d" -MT"3_hwbp_core_com.d" -MT"3_hwbp_core_com.o"   -o "3_hwbp_core_com.o" ".././hwbp_core_com.c"	
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_4)" -c -std=gnu99 -MD -MP -MF "4_hwbp_core_com.d" -MT"4_hwbp_core_com.d" -MT"4_hwbp_core_com.o"   -o "4_hwbp_core_com.o" ".././hwbp_core_com.c"	
+	@echo Finished building: $<
+	
+	
+./hwbp_sync.o: .././hwbp_sync.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 4.8.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_0)" -c -std=gnu99 -MD -MP -MF "0_hwbp_sync.d" -MT"0_hwbp_sync.d" -MT"0_hwbp_sync.o"   -o "0_hwbp_sync.o" ".././hwbp_sync.c"
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_1)" -c -std=gnu99 -MD -MP -MF "1_hwbp_sync.d" -MT"1_hwbp_sync.d" -MT"1_hwbp_sync.o"   -o "1_hwbp_sync.o" ".././hwbp_sync.c"	
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_2)" -c -std=gnu99 -MD -MP -MF "2_hwbp_sync.d" -MT"2_hwbp_sync.d" -MT"2_hwbp_sync.o"   -o "2_hwbp_sync.o" ".././hwbp_sync.c"	
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_3)" -c -std=gnu99 -MD -MP -MF "3_hwbp_sync.d" -MT"3_hwbp_sync.d" -MT"3_hwbp_sync.o"   -o "3_hwbp_sync.o" ".././hwbp_sync.c"	
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG  -O3 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -mrelax -g2 -Wall -mmcu="$(MCU_4)" -c -std=gnu99 -MD -MP -MF "4_hwbp_sync.d" -MT"4_hwbp_sync.d" -MT"4_hwbp_sync.o"   -o "4_hwbp_sync.o" ".././hwbp_sync.c"	
+	@echo Finished building: $<	
+	
+ifneq ($(MAKECMDGOALS),clean)
+ifneq ($(strip $(C_DEPS)),)
+-include $(C_DEPS)
+endif
+endif
+
+all: $(OUTPUT_FILE_PATH_0) $(ADDITIONAL_DEPENDENCIES)
+
+$(OUTPUT_FILE_PATH_0): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP)
+	@echo Building target: $@
+	@echo Invoking: AVR/GNU Archiver : 4.8.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-ar.exe$(QUOTE) -r  -o$(OUTPUT_FILE_PATH_AS_ARGS_0) 0_cpu.o 0_hwbp_core.o 0_hwbp_core_com.o 0_hwbp_sync.o
+	@echo Finished building target: $@
+	
+all: $(OUTPUT_FILE_PATH_1) $(ADDITIONAL_DEPENDENCIES)	
+
+$(OUTPUT_FILE_PATH_1): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP)
+	@echo Building target: $@
+	@echo Invoking: AVR/GNU Archiver : 4.8.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-ar.exe$(QUOTE) -r  -o$(OUTPUT_FILE_PATH_AS_ARGS_1) 1_cpu.o 1_hwbp_core.o 1_hwbp_core_com.o 1_hwbp_sync.o
+	@echo Finished building target: $@
+
+all: $(OUTPUT_FILE_PATH_2) $(ADDITIONAL_DEPENDENCIES)	
+
+$(OUTPUT_FILE_PATH_2): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP)
+	@echo Building target: $@
+	@echo Invoking: AVR/GNU Archiver : 4.8.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-ar.exe$(QUOTE) -r  -o$(OUTPUT_FILE_PATH_AS_ARGS_2) 2_cpu.o 2_hwbp_core.o 2_hwbp_core_com.o 2_hwbp_sync.o
+	@echo Finished building target: $@
+
+all: $(OUTPUT_FILE_PATH_3) $(ADDITIONAL_DEPENDENCIES)	
+
+$(OUTPUT_FILE_PATH_3): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP)
+	@echo Building target: $@
+	@echo Invoking: AVR/GNU Archiver : 4.8.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-ar.exe$(QUOTE) -r  -o$(OUTPUT_FILE_PATH_AS_ARGS_3) 3_cpu.o 3_hwbp_core.o 3_hwbp_core_com.o 3_hwbp_sync.o
+	@echo Finished building target: $@
+	
+all: $(OUTPUT_FILE_PATH_4) $(ADDITIONAL_DEPENDENCIES)	
+	
+$(OUTPUT_FILE_PATH_4): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP)
+	@echo Building target: $@
+	@echo Invoking: AVR/GNU Archiver : 4.8.1
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-ar.exe$(QUOTE) -r  -o$(OUTPUT_FILE_PATH_AS_ARGS_4) 4_cpu.o 4_hwbp_core.o 4_hwbp_core_com.o 4_hwbp_sync.o
+	@echo Finished building target: $@	
+	
+	
+# Other Targets
+clean:
+	-$(RM) $(OBJS_AS_ARGS) $(EXECUTABLES)  
+	-$(RM) $(C_DEPS_AS_ARGS)   
+	#rm -rf "libCore.elf" "libCore.a" "libCore.hex" "libCore.lss" "libCore.eep" "libCore.map" "libCore.srec" "libCore.usersignatures"
+	
+	

@@ -2,7 +2,10 @@
 bin
 obj
 packages
-**/Debug
 *.atsuo
 *.user
 *.componentinfo.xml
+
+*.o
+*.d
+*.a
