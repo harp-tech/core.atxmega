@@ -61,3 +61,7 @@ On the Harp devices, two packages are being used: 44 and 100 pins. The main adva
 | Microcontroller used| ATxmega32A4U          | ATxmega64A4U      | ATxmega128A1U     | ATxmega128A4U   |
 | Internall Buffer    | 2 KBytes              | 2 KBytes          | 6 KBytes          | 6 KBytes        |
 | **Library to Use**  | *libATxmega32A4U.a*   |*libATxmega64A4U.a*|*libATxmega128A1U.a*|*libATxmega128A4U.a*|
+
+## Licensing ##
+
+Each subdirectory will contain a license or, possibly, a set of licenses if it involves both hardware and software.
