@@ -76,7 +76,7 @@ void hwbp_com_uart_enable(void)
 
 void hwbp_com_uart_disable(void)
 {
-	HWBP_UART_UART.CTRLB &= (USART_RXEN_bm | USART_TXEN_bm);
+	HWBP_UART_UART.CTRLB &= ~(USART_RXEN_bm | USART_TXEN_bm);
 }
 
 /************************************************************************/
