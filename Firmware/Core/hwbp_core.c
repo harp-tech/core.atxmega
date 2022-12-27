@@ -568,19 +568,40 @@ ISR(TCC1_CCA_vect, ISR_NAKED)
 		}		
 
 		/* Check if a command is ready to execute */
+		
+		/* Disable high level interrupts */
+		PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
+		PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
+		
 		if (rx_cmd_ready)
 		{
 			if (rx_cmd_ready == 1)
 			{
+				/* Re-enable high level interrupts */
+				PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
+				PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
+				
 				parse_and_reply(rxbuff_hwbp_uart_buff1, cmd_len_buff1);
 			}
 			else
 			{
+				/* Re-enable high level interrupts */
+				PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
+				PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
+						
 				parse_and_reply(rxbuff_hwbp_uart_buff2, cmd_len_buff2);
 			}
 			
+			/* Disable high level interrupts */
+			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
+			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
+		
 			rx_cmd_ready = 0;
 		}
+		
+		/* Re-enable high level interrupts */
+		PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
+		PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
         
         
         if (com_mode == COM_MODE_UART)
