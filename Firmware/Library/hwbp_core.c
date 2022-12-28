@@ -1171,6 +1171,21 @@ bool hwbp_write_common_reg(uint8_t add, uint8_t type, uint8_t * content, uint16_
 		
 		/* Update register */
 		commonbank.R_TIMESTAMP_SECOND = *((uint32_t*)(content));
+		
+		/* Update offset */
+		if (commonbank.R_TIMESTAMP_OFFSET != 0)
+		{
+			TCC1_CNT = 0;
+			TCC1_CCA = _500us_cca_values[0] - 1;
+			_500us_cca_index = 1;					
+			
+			for (uint8_t i = 0; i < commonbank.R_TIMESTAMP_OFFSET; i++)
+			{
+				uint8_t temp_cca = TCC1_CCA;
+				TCC1_CCA += _500us_cca_values[_500us_cca_index++ & 0x07];				
+				TCC1_CNT = temp_cca + 1;	// Offset by 32 us because there was already a register processing time
+			}
+		}
 
 		/* Return success */
 		return true;
@@ -1281,6 +1296,13 @@ bool hwbp_write_common_reg(uint8_t add, uint8_t type, uint8_t * content, uint16_
 	else if (add == ADD_R_CONFIG)
 	{
 		return hwbp_write_common_reg_CONFIG(content);
+	}
+	/* R_TIMESTAMP_OFFSET */
+	if (add == ADD_R_TIMESTAMP_OFFSET)
+	{
+		commonbank.R_TIMESTAMP_OFFSET = *((uint8_t*)content);
+		
+		return true;
 	}
 
 	/* Return error */
