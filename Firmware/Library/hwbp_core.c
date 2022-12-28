@@ -104,6 +104,7 @@ static struct CommonBank
 	uint8_t R_DEVICE_NAME[25];
 	uint16_t R_SERIAL_NUMBER;
 	uint8_t R_CLOCK_CONFIG;
+	uint8_t R_TIMESTAMP_OFFSET;
 } commonbank;
 
 static uint8_t regs_type[] = {
@@ -119,8 +120,9 @@ static uint8_t regs_type[] = {
 	TYPE_U16,
 	TYPE_U8,
 	TYPE_U8,
-    TYPE_U8,
+	TYPE_U8,
 	TYPE_U16,
+	TYPE_U8,
 	TYPE_U8
 };
 
@@ -139,6 +141,7 @@ static uint16_t regs_n_elements[] = {
 	1,
 	25,
 	1,
+	1,
 	1
 };
 
@@ -155,9 +158,10 @@ static uint8_t *regs_pointer[] = {
 	(uint8_t*)(&commonbank.R_TIMESTAMP_MICRO),
 	(uint8_t*)(&commonbank.R_OPERATION_CTRL),
 	(uint8_t*)(&commonbank.R_RESET_DEV),
-    (uint8_t*)(commonbank.R_DEVICE_NAME),
-    (uint8_t*)(&commonbank.R_SERIAL_NUMBER),
-	(uint8_t*)(&commonbank.R_CLOCK_CONFIG)
+	(uint8_t*)(commonbank.R_DEVICE_NAME),
+	(uint8_t*)(&commonbank.R_SERIAL_NUMBER),
+	(uint8_t*)(&commonbank.R_CLOCK_CONFIG),
+	(uint8_t*)(&commonbank.R_TIMESTAMP_OFFSET)
 };
 
 
@@ -266,7 +270,8 @@ void core_func_start_core (
     const uint8_t num_of_app_registers,
     const uint8_t *device_name,
     const bool	device_is_able_to_repeat_clock,
-    const bool	device_is_able_to_generate_clock)
+    const bool	device_is_able_to_generate_clock,
+	 const uint8_t default_timestamp_offset)
 {	
 	/* Shut down watchdog */
 	wdt_disable();
@@ -413,6 +418,9 @@ void core_func_start_core (
 		commonbank.R_CLOCK_CONFIG |= B_GEN_ABLE;
 	else
 		commonbank.R_CLOCK_CONFIG &= ~B_GEN_ABLE;
+	
+	/* Configures default shift when programing the timestamp */
+	commonbank.R_TIMESTAMP_OFFSET = default_timestamp_offset;
 	
 	/* Start 1 second timer */
 	timer_type1_enable(&TCC1, TIMER_PRESCALER_DIV1024, 31250, INT_LEVEL_LOW);
@@ -1167,6 +1175,21 @@ bool hwbp_write_common_reg(uint8_t add, uint8_t type, uint8_t * content, uint16_
 		
 		/* Update register */
 		commonbank.R_TIMESTAMP_SECOND = *((uint32_t*)(content));
+		
+		/* Update offset */
+		if (commonbank.R_TIMESTAMP_OFFSET != 0)
+		{
+			TCC1_CNT = 0;
+			TCC1_CCA = _500us_cca_values[0] - 1;
+			_500us_cca_index = 1;					
+			
+			for (uint8_t i = 0; i < commonbank.R_TIMESTAMP_OFFSET; i++)
+			{
+				uint8_t temp_cca = TCC1_CCA;
+				TCC1_CCA += _500us_cca_values[_500us_cca_index++ & 0x07];				
+				TCC1_CNT = temp_cca + 1;	// Offset by 32 us because there was already a register processing time
+			}
+		}
 
 		/* Return success */
 		return true;
@@ -1277,6 +1300,13 @@ bool hwbp_write_common_reg(uint8_t add, uint8_t type, uint8_t * content, uint16_
 	else if (add == ADD_R_CONFIG)
 	{
 		return hwbp_write_common_reg_CONFIG(content);
+	}
+	/* R_TIMESTAMP_OFFSET */
+	if (add == ADD_R_TIMESTAMP_OFFSET)
+	{
+		commonbank.R_TIMESTAMP_OFFSET = *((uint8_t*)content);
+		
+		return true;
 	}
 
 	/* Return error */
