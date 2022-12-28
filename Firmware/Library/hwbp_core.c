@@ -270,7 +270,8 @@ void core_func_start_core (
     const uint8_t num_of_app_registers,
     const uint8_t *device_name,
     const bool	device_is_able_to_repeat_clock,
-    const bool	device_is_able_to_generate_clock)
+    const bool	device_is_able_to_generate_clock,
+	 const uint8_t default_timestamp_offset)
 {	
 	/* Shut down watchdog */
 	wdt_disable();
@@ -417,6 +418,9 @@ void core_func_start_core (
 		commonbank.R_CLOCK_CONFIG |= B_GEN_ABLE;
 	else
 		commonbank.R_CLOCK_CONFIG &= ~B_GEN_ABLE;
+	
+	/* Configures default shift when programing the timestamp */
+	commonbank.R_TIMESTAMP_OFFSET = default_timestamp_offset;
 	
 	/* Start 1 second timer */
 	timer_type1_enable(&TCC1, TIMER_PRESCALER_DIV1024, 31250, INT_LEVEL_LOW);
