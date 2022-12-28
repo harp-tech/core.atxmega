@@ -104,6 +104,7 @@ static struct CommonBank
 	uint8_t R_DEVICE_NAME[25];
 	uint16_t R_SERIAL_NUMBER;
 	uint8_t R_CLOCK_CONFIG;
+	uint8_t R_TIMESTAMP_OFFSET;
 } commonbank;
 
 static uint8_t regs_type[] = {
@@ -119,8 +120,9 @@ static uint8_t regs_type[] = {
 	TYPE_U16,
 	TYPE_U8,
 	TYPE_U8,
-    TYPE_U8,
+	TYPE_U8,
 	TYPE_U16,
+	TYPE_U8,
 	TYPE_U8
 };
 
@@ -139,6 +141,7 @@ static uint16_t regs_n_elements[] = {
 	1,
 	25,
 	1,
+	1,
 	1
 };
 
@@ -155,9 +158,10 @@ static uint8_t *regs_pointer[] = {
 	(uint8_t*)(&commonbank.R_TIMESTAMP_MICRO),
 	(uint8_t*)(&commonbank.R_OPERATION_CTRL),
 	(uint8_t*)(&commonbank.R_RESET_DEV),
-    (uint8_t*)(commonbank.R_DEVICE_NAME),
-    (uint8_t*)(&commonbank.R_SERIAL_NUMBER),
-	(uint8_t*)(&commonbank.R_CLOCK_CONFIG)
+	(uint8_t*)(commonbank.R_DEVICE_NAME),
+	(uint8_t*)(&commonbank.R_SERIAL_NUMBER),
+	(uint8_t*)(&commonbank.R_CLOCK_CONFIG),
+	(uint8_t*)(&commonbank.R_TIMESTAMP_OFFSET)
 };
 
 

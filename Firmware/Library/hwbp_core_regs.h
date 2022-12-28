@@ -21,9 +21,10 @@
 #define ADD_R_DEVICE_NAME       0x0C    // U8
 #define ADD_R_SERIAL_NUMBER     0x0D    // U16
 #define ADD_R_CONFIG            0x0E    // U8
+#define ADD_R_TIMESTAMP_OFFSET  0x0F    // U8
 
 /* Memory limits */
-#define COMMON_BANK_ADD_MAX             0x0E
+#define COMMON_BANK_ADD_MAX             0x0F
 #define COMMON_BANK_ABSOLUTE_ADD_MAX    0x1C
 
 /* R_OPERATION_CTRL */
