@@ -93,8 +93,8 @@ static struct CommonBank
 	uint8_t	R_HW_VERSION_H;
 	uint8_t	R_HW_VERSION_L;
 	uint8_t	R_ASSEMBLY_VERSION;
-	uint8_t	R_HARP_VERSION_H;
-	uint8_t	R_HARP_VERSION_L;
+	uint8_t	R_CORE_VERSION_H;
+	uint8_t	R_CORE_VERSION_L;
 	uint8_t	R_FW_VERSION_H;
 	uint8_t	R_FW_VERSION_L;
 	uint32_t	R_TIMESTAMP_SECOND;
@@ -150,8 +150,8 @@ static uint8_t *regs_pointer[] = {
 	(uint8_t*)(&commonbank.R_HW_VERSION_H),
 	(uint8_t*)(&commonbank.R_HW_VERSION_L),
 	(uint8_t*)(&commonbank.R_ASSEMBLY_VERSION),
-	(uint8_t*)(&commonbank.R_HARP_VERSION_H),
-	(uint8_t*)(&commonbank.R_HARP_VERSION_L),
+	(uint8_t*)(&commonbank.R_CORE_VERSION_H),
+	(uint8_t*)(&commonbank.R_CORE_VERSION_L),
 	(uint8_t*)(&commonbank.R_FW_VERSION_H),
 	(uint8_t*)(&commonbank.R_FW_VERSION_L),
 	(uint8_t*)(&commonbank.R_TIMESTAMP_SECOND),
@@ -214,7 +214,7 @@ static uint8_t _500us_cca_index = 0;
 #define EEPROM_ADD_MEM_IN_USE       0
 #define EEPROM_ADD_R_OPERATION_CTRL 1
 #define EEPROM_ADD_R_FW_VERSION_H   2
-#define EEPROM_ADD_R_HARP_VERSION_H 3
+#define EEPROM_ADD_R_CORE_VERSION_H 3
 #define EEPROM_ADD_SN_HIGH          4
 #define EEPROM_ADD_SN_LOW           5
 #define EEPROM_ADD_CLOCK_CONFIG     6
@@ -287,8 +287,8 @@ void core_func_start_core (
 	commonbank.R_HW_VERSION_H = hwH;
 	commonbank.R_HW_VERSION_L = hwL;
 	commonbank.R_ASSEMBLY_VERSION = assembly;
-	commonbank.R_HARP_VERSION_H = VH;
-	commonbank.R_HARP_VERSION_L = VL;
+	commonbank.R_CORE_VERSION_H = VH;
+	commonbank.R_CORE_VERSION_L = VL;
 	commonbank.R_FW_VERSION_H = fwH;
 	commonbank.R_FW_VERSION_L = fwL;
 	commonbank.R_TIMESTAMP_SECOND = 0;		// Timestamps starts from 0 (ZERO)
@@ -297,16 +297,16 @@ void core_func_start_core (
         
     /* Read versions from EEPROM */
     uint8_t previousFwH   = eeprom_rd_byte(EEPROM_ADD_R_FW_VERSION_H);
-    uint8_t previousHarpH = eeprom_rd_byte(EEPROM_ADD_R_HARP_VERSION_H);
+    uint8_t previousHarpH = eeprom_rd_byte(EEPROM_ADD_R_CORE_VERSION_H);
     
     /* Check if the versions on EEPROM were never updated */
     if (previousHarpH == 0xFF)
     {
         eeprom_wr_byte(EEPROM_ADD_R_FW_VERSION_H, fwH);
-        eeprom_wr_byte(EEPROM_ADD_R_HARP_VERSION_H, VH);
+        eeprom_wr_byte(EEPROM_ADD_R_CORE_VERSION_H, VH);
         
         previousFwH   = eeprom_rd_byte(EEPROM_ADD_R_FW_VERSION_H);
-        previousHarpH = eeprom_rd_byte(EEPROM_ADD_R_HARP_VERSION_H);
+        previousHarpH = eeprom_rd_byte(EEPROM_ADD_R_CORE_VERSION_H);
         
         /* Write the device name for the first time */
         write_device_name_to_eeprom(device_name);        
@@ -324,7 +324,7 @@ void core_func_start_core (
         
         /* Update EERPOM */
         eeprom_wr_byte(EEPROM_ADD_R_FW_VERSION_H, fwH);
-        eeprom_wr_byte(EEPROM_ADD_R_HARP_VERSION_H, VH);
+        eeprom_wr_byte(EEPROM_ADD_R_CORE_VERSION_H, VH);
     }        
 	
 	/* Callback to start the device */
