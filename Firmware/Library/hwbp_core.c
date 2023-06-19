@@ -719,8 +719,23 @@ static void parse_and_reply(uint8_t * packet_p, uint16_t len)
 	uint8_t add = (*(packet_p+1) != 255) ? *(packet_p+2) : *(packet_p+4);			// add
 	uint8_t port = (*(packet_p+1) != 255) ? *(packet_p+3) : *(packet_p+5);			// port
 	uint8_t type = (*(packet_p+1) != 255) ? *(packet_p+4) : *(packet_p+6);			// type
-	uint8_t * payload_p = (*(packet_p+1) != 255) ? (packet_p+5) : (packet_p+7);	// payload pointer
-	uint16_t payload_n_elements = (len - 4) / (type & MSK_TYPE_LEN);					// number of elements on the payload array
+	uint8_t * payload_p;																				// payload pointer
+	uint16_t payload_n_elements;																	// number of elements on the payload array
+	
+	/* Update payload address, type, and payload_n_elements */
+	if (type & 16)
+	{
+		/* If it's timestamped */
+		type &= 0xEF;//~(16);																		// clear timestamp flag
+		payload_p = (*(packet_p+1) != 255) ? (packet_p+5+6) : (packet_p+7+6);		// payload pointer
+		payload_n_elements = (len - 4-6) / (type & MSK_TYPE_LEN);						// number of elements on the payload array
+	}
+	else
+	{
+		/* if it's _not_ timestamped */
+		payload_p = (*(packet_p+1) != 255) ? (packet_p+5) : (packet_p+7);				// payload pointer
+		payload_n_elements = (len - 4) / (type & MSK_TYPE_LEN);							// number of elements on the payload array
+	}
 	
 	bool ok = false;
 	
