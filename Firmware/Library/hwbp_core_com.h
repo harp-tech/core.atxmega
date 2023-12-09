@@ -119,7 +119,7 @@
 	#define hwbp_uart_leave_interrupt return/*reti();*/
 
 	/* Use as much as possible */
-	#define HWBP_UART_TXBUFSIZ		6144
+	#define HWBP_UART_TXBUFSIZ		5120
 #endif
 
 #if defined(__AVR_ATxmega128A1U__)
@@ -144,7 +144,7 @@
 	#define hwbp_uart_leave_interrupt return/*reti();*/
 
 	/* Use as much as possible */
-	#define HWBP_UART_TXBUFSIZ		6144
+	#define HWBP_UART_TXBUFSIZ		5120
 #endif
 
 
