@@ -17,6 +17,7 @@ uint8_t cmd_len_buff2;					// Contains the "len" of the command available on buf
 uint8_t txbuff_hwbp_uart[HWBP_UART_TXBUFSIZ];
 uint8_t rxbuff_hwbp_uart_buff1[HWBP_UART_RXBUFSIZ];
 uint8_t rxbuff_hwbp_uart_buff2[HWBP_UART_RXBUFSIZ];
+uint8_t rxbuff_hwbp_uart_temp_buff1[HWBP_UART_TEMP_RXBUFSIZ];
 
 #if HWBP_UART_TXBUFSIZ >= 256
 	uint16_t hwbp_uart_tail = 0;

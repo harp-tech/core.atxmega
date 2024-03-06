@@ -105,17 +105,17 @@ MCU_2="atxmega128a4u"
 MCU_3="atxmega128a1u"
 MCU_4="atxmega16a4u"
 
-OUTPUT_FILE_PATH_0 +=libATxmega32A4U-1.14.a
-OUTPUT_FILE_PATH_1 +=libATxmega64A4U-1.14.a
-OUTPUT_FILE_PATH_2 +=libATxmega128A4U-1.14.a
-OUTPUT_FILE_PATH_3 +=libATxmega128A1U-1.14.a
-OUTPUT_FILE_PATH_4 +=libATxmega16A4U_ClockSync-1.14.a
+OUTPUT_FILE_PATH_0 +=libATxmega32A4U-1.14-preview2.a
+OUTPUT_FILE_PATH_1 +=libATxmega64A4U-1.14-preview2.a
+OUTPUT_FILE_PATH_2 +=libATxmega128A4U-1.14-preview2.a
+OUTPUT_FILE_PATH_3 +=libATxmega128A1U-1.14-preview2.a
+OUTPUT_FILE_PATH_4 +=libATxmega16A4U_ClockSync-1.14-preview2.a
 
-OUTPUT_FILE_PATH_AS_ARGS_0 +=libATxmega32A4U-1.14.a
-OUTPUT_FILE_PATH_AS_ARGS_1 +=libATxmega64A4U-1.14.a
-OUTPUT_FILE_PATH_AS_ARGS_2 +=libATxmega128A4U-1.14.a
-OUTPUT_FILE_PATH_AS_ARGS_3 +=libATxmega128A1U-1.14.a
-OUTPUT_FILE_PATH_AS_ARGS_4 +=libATxmega16A4U_ClockSync-1.14.a
+OUTPUT_FILE_PATH_AS_ARGS_0 +=libATxmega32A4U-1.14-preview2.a
+OUTPUT_FILE_PATH_AS_ARGS_1 +=libATxmega64A4U-1.14-preview2.a
+OUTPUT_FILE_PATH_AS_ARGS_2 +=libATxmega128A4U-1.14-preview2.a
+OUTPUT_FILE_PATH_AS_ARGS_3 +=libATxmega128A1U-1.14-preview2.a
+OUTPUT_FILE_PATH_AS_ARGS_4 +=libATxmega16A4U_ClockSync-1.14-preview2.a
 
 
 ################################################################################

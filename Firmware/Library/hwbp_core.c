@@ -43,8 +43,12 @@ extern uint8_t rx_cmd_ready;
 extern uint8_t cmd_len_buff1;
 extern uint8_t cmd_len_buff2;
 
+bool rx_temp_cmd_ready = false;
+
 extern uint8_t rxbuff_hwbp_uart_buff1[];
 extern uint8_t rxbuff_hwbp_uart_buff2[];
+extern uint8_t rxbuff_hwbp_uart_temp_buff1[];
+
 #if HWBP_UART_RXBUFSIZ >= 256
 	extern uint16_t hwbp_uart_rx_pointer_buff1;
 	extern uint16_t hwbp_uart_rx_pointer_buff2;
@@ -575,13 +579,38 @@ ISR(TCC1_CCA_vect, ISR_NAKED)
 			}
 		}		
 
-		/* Check if a command is ready to execute */
+		/* Check if a command exist in the temporary buffer */
+		if (rxbuff_hwbp_uart_temp_buff1[0] != 0)
+		{
+			if (*((uint32_t*)(rxbuff_hwbp_uart_temp_buff1+5)) < commonbank.R_TIMESTAMP_SECOND)			// if timestamp < device's timestamp
+			{
+				rx_temp_cmd_ready = true;
+			}
+			else if (*((uint32_t*)(rxbuff_hwbp_uart_temp_buff1+5)) == commonbank.R_TIMESTAMP_SECOND)	// if timestamp = device's timestamp
+			{
+				if (*((uint16_t*)(rxbuff_hwbp_uart_temp_buff1+5+4)) <= TCC1_CNT)						// if us <= device's us
+				{
+					rx_temp_cmd_ready = true;
+				}
+			}
+		}
 		
 		/* Disable high level interrupts */
 		PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
 		PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm;
 		
-		if (rx_cmd_ready)
+		if (rx_temp_cmd_ready)
+		{
+			/* Re-enable high level interrupts */
+			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
+			PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;			
+			
+			parse_and_reply(rxbuff_hwbp_uart_temp_buff1, rxbuff_hwbp_uart_temp_buff1[1]);
+			
+			rxbuff_hwbp_uart_temp_buff1[0] = 0;	// Clear temporary message
+			rx_temp_cmd_ready = false;
+		}
+		else if (rx_cmd_ready)
 		{
 			if (rx_cmd_ready == 1)
 			{
@@ -589,15 +618,69 @@ ISR(TCC1_CCA_vect, ISR_NAKED)
 				PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
 				PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
 				
-				parse_and_reply(rxbuff_hwbp_uart_buff1, cmd_len_buff1);
+				uint8_t * type = (*(rxbuff_hwbp_uart_buff1+1) != 255) ? (rxbuff_hwbp_uart_buff1+4) : (rxbuff_hwbp_uart_buff1+6);
+				
+				if (*type & 16)
+				{
+					/* If it's timestamped */
+					if (*((uint32_t*)(type+1)) < commonbank.R_TIMESTAMP_SECOND)			// if timestamp < device's timestamp
+					{
+						parse_and_reply(rxbuff_hwbp_uart_buff1, cmd_len_buff1);
+						TGL_STATE_LED;
+					}
+					else if (*((uint32_t*)(type+1)) == commonbank.R_TIMESTAMP_SECOND)	// if timestamp = device's timestamp
+					{
+						if (*((uint16_t*)(type+1+4)) <= TCC1_CNT)						// if us <= device's us
+						{
+							parse_and_reply(rxbuff_hwbp_uart_buff1, cmd_len_buff1);
+							TGL_STATE_LED;
+						}
+					}
+					else
+					{
+						/* Copy to temporary buffer*/
+						memcpy(rxbuff_hwbp_uart_temp_buff1, rxbuff_hwbp_uart_buff1, rxbuff_hwbp_uart_buff1[1] + 2);
+					}
+				}
+				else
+				{
+					parse_and_reply(rxbuff_hwbp_uart_buff1, cmd_len_buff1);
+				}
 			}
 			else
 			{
 				/* Re-enable high level interrupts */
 				PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
 				PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
-						
-				parse_and_reply(rxbuff_hwbp_uart_buff2, cmd_len_buff2);
+				
+				uint8_t * type = (*(rxbuff_hwbp_uart_buff2+1) != 255) ? (rxbuff_hwbp_uart_buff2+4) : (rxbuff_hwbp_uart_buff2+6);
+				
+				if (*type & 16)
+				{
+					/* If it's timestamped */
+					if (*((uint32_t*)(type+1)) < commonbank.R_TIMESTAMP_SECOND)			// if timestamp < device's timestamp
+					{
+						parse_and_reply(rxbuff_hwbp_uart_buff2, cmd_len_buff2);
+						TGL_STATE_LED;
+					}
+					else if (*((uint32_t*)(type+1)) == commonbank.R_TIMESTAMP_SECOND)	// if timestamp = device's timestamp
+					{
+						if (*((uint16_t*)(type+1+4)) <= TCC1_CNT)						// if us <= device's us
+						{
+							parse_and_reply(rxbuff_hwbp_uart_buff2, cmd_len_buff2);
+							TGL_STATE_LED;
+						}
+					}
+					else
+					{	
+						/* Copy to temporary buffer*/
+						memcpy(rxbuff_hwbp_uart_temp_buff1, rxbuff_hwbp_uart_buff2, rxbuff_hwbp_uart_buff2[1] + 2);
+					}
+				}
+				else
+				{
+					parse_and_reply(rxbuff_hwbp_uart_buff2, cmd_len_buff2);
+				}
 			}
 			
 			/* Disable high level interrupts */
