@@ -460,6 +460,9 @@ void core_func_catastrophic_error_detected(void)
 
 /************************************************************************/
 /* One second timer                                                     */
+/* Run time:                                                            */
+/*           4.12 us when heartbeat is disabled                         */
+/*           29.6 us when heartbeat is enabled                          */
 /************************************************************************/
 static uint8_t shutdown_counter = 0;
 
@@ -524,6 +527,8 @@ ISR(TCC1_OVF_vect, ISR_NAKED)
 
 /************************************************************************/
 /* 500 us timer used to call app                                        */
+/* Run time:                                                            */
+/*           4.76 us                                                    */
 /************************************************************************/
 uint16_t CTS_timeout_counter = 0;
 #define CTS_TIMEOUT_MS 3000

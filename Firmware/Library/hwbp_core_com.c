@@ -82,6 +82,10 @@ void hwbp_com_uart_disable(void)
 
 /************************************************************************/
 /* Interrupt TX                                                         */
+/* Run time:                                                            */
+/*           1.16 us                                                    */
+/* Minimum interval between interrupts:                                 */
+/*           1.82 us                                                    */
 /************************************************************************/
 HWBP_UART_TX_ROUTINE_
 {
@@ -101,6 +105,9 @@ HWBP_UART_TX_ROUTINE_
 
 /************************************************************************/
 /* Interrupt CTS                                                        */
+/* Run time:                                                            */
+/*           720 ns to enable DRE (TX) interrupt                        */
+/*           470 ns to disable DRE (TX) interrupt                       */
 /************************************************************************/
 HWBP_UART_CTS_ROUTINE_
 {	
@@ -206,6 +213,11 @@ bool hwbp_uart_rcv_now(uint8_t * byte)
 
 extern void core_func_catastrophic_error_detected(void);
 
+/************************************************************************/
+/* Interrupt RX                                                         */
+/* Run time:                                                            */
+/*           1.16 us max                                                */
+/************************************************************************/
 HWBP_UART_RX_ROUTINE_
 {
 	uint8_t chr;
