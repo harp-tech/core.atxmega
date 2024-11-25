@@ -17,6 +17,7 @@ uint8_t cmd_len_buff2;					// Contains the "len" of the command available on buf
 uint8_t txbuff_hwbp_uart[HWBP_UART_TXBUFSIZ];
 uint8_t rxbuff_hwbp_uart_buff1[HWBP_UART_RXBUFSIZ];
 uint8_t rxbuff_hwbp_uart_buff2[HWBP_UART_RXBUFSIZ];
+uint8_t rxbuff_hwbp_uart_temp_buff1[HWBP_UART_TEMP_RXBUFSIZ];
 
 #if HWBP_UART_TXBUFSIZ >= 256
 	uint16_t hwbp_uart_tail = 0;
@@ -81,6 +82,10 @@ void hwbp_com_uart_disable(void)
 
 /************************************************************************/
 /* Interrupt TX                                                         */
+/* Run time:                                                            */
+/*           1.16 us                                                    */
+/* Minimum interval between interrupts:                                 */
+/*           1.82 us                                                    */
 /************************************************************************/
 HWBP_UART_TX_ROUTINE_
 {
@@ -100,6 +105,9 @@ HWBP_UART_TX_ROUTINE_
 
 /************************************************************************/
 /* Interrupt CTS                                                        */
+/* Run time:                                                            */
+/*           720 ns to enable DRE (TX) interrupt                        */
+/*           470 ns to disable DRE (TX) interrupt                       */
 /************************************************************************/
 HWBP_UART_CTS_ROUTINE_
 {	
@@ -205,6 +213,11 @@ bool hwbp_uart_rcv_now(uint8_t * byte)
 
 extern void core_func_catastrophic_error_detected(void);
 
+/************************************************************************/
+/* Interrupt RX                                                         */
+/* Run time:                                                            */
+/*           1.16 us max                                                */
+/************************************************************************/
 HWBP_UART_RX_ROUTINE_
 {
 	uint8_t chr;
