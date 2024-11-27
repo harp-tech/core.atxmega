@@ -131,11 +131,7 @@ void trigger_sync_timer (void)
 /************************************************************************/
 #if defined(__AVR_ATxmega16A4U__)
     ISR(TCD0_OVF_vect, ISR_NAKED)
-    {
-        if ((*timestamp_B0 == 0xAA) && (*timestamp_B1 == 0xAF)) reti();
-        if ((*timestamp_B1 == 0xAA) && (*timestamp_B2 == 0xAF)) reti();
-        if ((*timestamp_B2 == 0xAA) && (*timestamp_B3 == 0xAF)) reti();
-        
+    {   
         switch (timestamp_tx_counter)
         {
             case 1:
