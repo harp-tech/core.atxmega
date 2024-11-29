@@ -545,9 +545,10 @@ ISR(TCC1_CCA_vect, ISR_NAKED)
 {   
 	SYNC_TRIGGER_TIMER;
     
+    TCC1_CCA += _500us_cca_values[_500us_cca_index++ & 0x07];
+	
     core_callback_t_before_exec();
-
-	TCC1_CCA += _500us_cca_values[_500us_cca_index++ & 0x07];	
+	
 
 	//core_send_event(ADD_R_TIMESTAMP_SECOND);
 
