@@ -197,15 +197,6 @@ void trigger_sync_timer (void)
 {
     uint8_t byte = USART_RX_BYTE;
     
-    if (byte == 0xAA)
-    {
-        state = 0;
-    }        
-    else if (byte == 0xAF)
-    {
-        state = 1;
-    }
-    
     switch (state)        
     {
         case 0:
