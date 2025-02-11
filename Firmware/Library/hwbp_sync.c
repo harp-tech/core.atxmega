@@ -131,11 +131,7 @@ void trigger_sync_timer (void)
 /************************************************************************/
 #if defined(__AVR_ATxmega16A4U__)
     ISR(TCD0_OVF_vect, ISR_NAKED)
-    {
-        if ((*timestamp_B0 == 0xAA) && (*timestamp_B1 == 0xAF)) reti();
-        if ((*timestamp_B1 == 0xAA) && (*timestamp_B2 == 0xAF)) reti();
-        if ((*timestamp_B2 == 0xAA) && (*timestamp_B3 == 0xAF)) reti();
-        
+    {   
         switch (timestamp_tx_counter)
         {
             case 1:
@@ -171,8 +167,8 @@ void trigger_sync_timer (void)
 #if defined(__AVR_ATxmega16A4U__)
 #else
     static uint8_t state = 0;
-    static uint8_t converging = 7;
-    uint8_t device_lost_sync_counter = 0;
+    static uint8_t converging;
+    uint8_t device_lost_sync_counter = 254;	// Needs to be lower than 255
 #endif
 
 #if defined(__AVR_ATxmega32A4U__)
@@ -200,15 +196,6 @@ void trigger_sync_timer (void)
 
 {
     uint8_t byte = USART_RX_BYTE;
-    
-    if (byte == 0xAA)
-    {
-        state = 0;
-    }        
-    else if (byte == 0xAF)
-    {
-        state = 1;
-    }
     
     switch (state)        
     {
@@ -244,36 +231,45 @@ void trigger_sync_timer (void)
         case 5:
             *((uint8_t*)(&sync_timestamp) + 3) = byte;
             state = 0;
-            
-            // CCA values:
-            // 31217
-            // 31233
-            // (the average is 31225)
-            
-            if (device_lost_sync_counter >= 10)
-                converging = 7;
+           
+			// We are here 98.2 +/-0.3 us after the last byte starts
+			// This means that we are 672 - 98.2 = 573.8 before the second elapses
+			// 573.8 us before the second elapses means that CCA should be equal to (1s - 573.8us) / 32us = 31232.1
+			// Let's use CCA = 31232
+		               
+			// The last CCA written is 31233 = 0.999456 us, i.e., 544 us before the second elapses
+		               
+			// The 'device_lost_sync_counter' is incremented externally on every timer overflow, i.e., when each second elapses
+			// If the sync is lost for more than 10 seconds,
+		   
+		    
+            if (device_lost_sync_counter >= 5)
+			{
+				// If the sync is lost for more than 5 seconds, restart the sync mechanism by converging
+                
+				converging = 12;	// 12*32us = 384 us away from the next 
+				TCC1_CNT = 31231 - converging;
+				TCC1_CCA = 31233;
+				
+				device_lost_sync_counter = 0;
+				
+			}
             else
+			{				
                 device_lost_sync_counter = 0;
+				
+                if (converging)
+					converging -= 2;
+							
+				if (TCC1_CNT < TCC1_CCA)
+				{
+					TCC1_CNT = 31231 - converging;
+					toggle_io(PORTD, 6);
+				}
+			}
             
-            /*
-            TCC1_CTRLA = TC_CLKSEL_OFF_gc;
-            TCC1_CTRLFSET = TC_CMD_RESET_gc;
-            TCC1_PER = 31250;
-            TCC1_INTCTRLA = INT_LEVEL_LOW;
-            */
-            
-            TCC1_CNT = 31225 - converging;
-            TCC1_CCA = 31233;
 			
 			clock_was_just_updated_externaly = true;
-            
-            /*
-            TCC1_CTRLA = TIMER_PRESCALER_DIV1024;
-            TCC1_INTCTRLB = INT_LEVEL_LOW;
-            */
-            
-            if (converging)
-                converging--;
             
             *core_timestamp_pointer = sync_timestamp;
             
