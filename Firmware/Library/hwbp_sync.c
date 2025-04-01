@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include "cpu.h"
 #include "hwbp_sync.h"
+#include "hwbp_core_regs.h"
 
 
 /************************************************************************/
@@ -16,6 +17,10 @@
     static uint32_t sync_timestamp;
     static uint32_t* core_timestamp_pointer;
 #endif
+
+static uint32_t previous_timestamp = 0;
+
+extern struct CommonBank commonbank;
 
 bool clock_was_just_updated_externaly = false;
 
@@ -242,36 +247,42 @@ void trigger_sync_timer (void)
 			// The 'device_lost_sync_counter' is incremented externally on every timer overflow, i.e., when each second elapses
 			// If the sync is lost for more than 10 seconds,
 		   
-		    
-            if (device_lost_sync_counter >= 5)
+		    if (previous_timestamp + 1 == sync_timestamp)
 			{
-				// If the sync is lost for more than 5 seconds, restart the sync mechanism by converging
-                
-				converging = 12;	// 12*32us = 384 us away from the next 
-				TCC1_CNT = 31231 - converging;
-				TCC1_CCA = 31233;
-				
-				device_lost_sync_counter = 0;
-				
-			}
-            else
-			{				
-                device_lost_sync_counter = 0;
-				
-                if (converging)
-					converging -= 2;
-							
-				if (TCC1_CNT < TCC1_CCA)
+				if (device_lost_sync_counter >= 5)
 				{
+					// If the sync is lost for more than 5 seconds, restart the sync mechanism by converging
+                
+					converging = 12;	// 12*32us = 384 us away from the next 
 					TCC1_CNT = 31231 - converging;
-					toggle_io(PORTD, 6);
+					TCC1_CCA = 31233;
+				
+					device_lost_sync_counter = 0;
+				
 				}
-			}
+				else
+				{				
+					device_lost_sync_counter = 0;
+				
+					if (converging)
+						converging -= 2;
+							
+					if (TCC1_CNT < TCC1_CCA)
+					{
+						TCC1_CNT = 31231 - converging;
+					}
+				}
             
 			
-			clock_was_just_updated_externaly = true;
+				clock_was_just_updated_externaly = true;
             
-            *core_timestamp_pointer = sync_timestamp;
+				*core_timestamp_pointer = sync_timestamp;
+				
+				if (converging == 0)
+					commonbank.R_HEARTBEAT |= B_IS_SYNCHRONIZED;
+			}
+			
+			previous_timestamp = sync_timestamp;
             
             return;
     }

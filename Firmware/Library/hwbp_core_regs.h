@@ -1,6 +1,31 @@
 #ifndef _HWBP_CORE_REGS_H_
 #define _HWBP_CORE_REGS_H_
 
+/************************************************************************/
+/* Common Bank Structure                                                */
+/************************************************************************/
+struct CommonBank
+{
+	uint16_t	R_WHO_AM_I;
+	uint8_t	R_HW_VERSION_H;
+	uint8_t	R_HW_VERSION_L;
+	uint8_t	R_ASSEMBLY_VERSION;
+	uint8_t	R_CORE_VERSION_H;
+	uint8_t	R_CORE_VERSION_L;
+	uint8_t	R_FW_VERSION_H;
+	uint8_t	R_FW_VERSION_L;
+	uint32_t	R_TIMESTAMP_SECOND;
+	uint16_t	R_TIMESTAMP_MICRO;
+	uint8_t	R_OPERATION_CTRL;
+	uint8_t	R_RESET_DEV;
+	uint8_t R_DEVICE_NAME[25];
+	uint16_t R_SERIAL_NUMBER;
+	uint8_t R_CLOCK_CONFIG;
+	uint8_t R_TIMESTAMP_OFFSET;
+	uint8_t R_UID[16];
+	uint8_t R_TAG[8];
+	uint16_t R_HEARTBEAT;
+};
 
 /************************************************************************/
 /* Common Bank Registers                                                */
