@@ -22,9 +22,12 @@
 #define ADD_R_SERIAL_NUMBER     0x0D    // U16
 #define ADD_R_CONFIG            0x0E    // U8
 #define ADD_R_TIMESTAMP_OFFSET  0x0F    // U8
+#define ADD_R_UID               0x10    // U8[16]
+#define ADD_R_TAG               0x11    // U8[8]
+#define ADD_R_HEARTBEAT         0x12    // U16
 
 /* Memory limits */
-#define COMMON_BANK_ADD_MAX             0x0F
+#define COMMON_BANK_ADD_MAX             0x12
 #define COMMON_BANK_ABSOLUTE_ADD_MAX    0x1C
 
 /* R_OPERATION_CTRL */
@@ -34,6 +37,7 @@
 #define GM_OP_MODE_ACTIVE   (1<<0)
 #define GM_OP_MODE_SPEED    (3<<0)
 
+#define B_HEARTBEAT_EN      (1<<2)
 #define B_DUMP              (1<<3)
 #define B_MUTE_RPL          (1<<4)
 #define B_VISUALEN          (1<<5)
@@ -59,6 +63,10 @@
 #define B_GEN_ABLE          (1<<4)
 #define B_CLK_UNLOCK        (1<<6)
 #define B_CLK_LOCK          (1<<7)
+
+/* ADD_R_HEARTBEAT */
+#define B_IS_SYNCHRONIZED   (1<<0)
+#define B_IS_ACTIVE         (1<<1)
 
 
 #endif /* _HWBP_CORE_REGS_H_ */
