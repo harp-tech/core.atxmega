@@ -91,25 +91,7 @@ static void xmit(uint8_t add, uint8_t header, bool use_core_timestamp);
 /************************************************************************/
 /* Common Regs Structure                                                */
 /************************************************************************/
-static struct CommonBank
-{
-	uint16_t	R_WHO_AM_I;
-	uint8_t	R_HW_VERSION_H;
-	uint8_t	R_HW_VERSION_L;
-	uint8_t	R_ASSEMBLY_VERSION;
-	uint8_t	R_CORE_VERSION_H;
-	uint8_t	R_CORE_VERSION_L;
-	uint8_t	R_FW_VERSION_H;
-	uint8_t	R_FW_VERSION_L;
-	uint32_t	R_TIMESTAMP_SECOND;
-	uint16_t	R_TIMESTAMP_MICRO;
-	uint8_t	R_OPERATION_CTRL;
-	uint8_t	R_RESET_DEV;
-	uint8_t R_DEVICE_NAME[25];
-	uint16_t R_SERIAL_NUMBER;
-	uint8_t R_CLOCK_CONFIG;
-	uint8_t R_TIMESTAMP_OFFSET;
-} commonbank;
+struct CommonBank commonbank;
 
 static uint8_t regs_type[] = {
 	TYPE_U16,
@@ -127,7 +109,10 @@ static uint8_t regs_type[] = {
 	TYPE_U8,
 	TYPE_U16,
 	TYPE_U8,
-	TYPE_U8
+	TYPE_U8,
+	TYPE_U8,
+	TYPE_U8,
+	TYPE_U16
 };
 
 static uint16_t regs_n_elements[] = {
@@ -146,6 +131,9 @@ static uint16_t regs_n_elements[] = {
 	25,
 	1,
 	1,
+	1,
+	16,
+	8,
 	1
 };
 
@@ -165,7 +153,10 @@ static uint8_t *regs_pointer[] = {
 	(uint8_t*)(commonbank.R_DEVICE_NAME),
 	(uint8_t*)(&commonbank.R_SERIAL_NUMBER),
 	(uint8_t*)(&commonbank.R_CLOCK_CONFIG),
-	(uint8_t*)(&commonbank.R_TIMESTAMP_OFFSET)
+	(uint8_t*)(&commonbank.R_TIMESTAMP_OFFSET),
+	(uint8_t*)(commonbank.R_UID),
+	(uint8_t*)(commonbank.R_TAG),
+	(uint8_t*)(&commonbank.R_HEARTBEAT)
 };
 
 
@@ -296,8 +287,17 @@ void core_func_start_core (
 	commonbank.R_FW_VERSION_H = fwH;
 	commonbank.R_FW_VERSION_L = fwL;
 	commonbank.R_TIMESTAMP_SECOND = 0;		// Timestamps starts from 0 (ZERO)
-	commonbank.R_TIMESTAMP_MICRO = 0;		// Timestamps starts from 0 (ZERO)	
+	commonbank.R_TIMESTAMP_MICRO = 0;		// Timestamps starts from 0 (ZERO)
+	commonbank.R_HEARTBEAT = 0;
 	//commonbank.R_RESET_DEV = 0;
+	
+	/* Reset UID to zero */
+	for (uint8_t i = 0; i < regs_n_elements[ADD_R_UID]; i++)
+		commonbank.R_UID[i] = 0;
+	
+	/* Reset Tag to zero */
+	for (uint8_t i = 0; i < regs_n_elements[ADD_R_TAG]; i++)
+		commonbank.R_TAG[i] = 0;
         
     /* Read versions from EEPROM */
     uint8_t previousFwH   = eeprom_rd_byte(EEPROM_ADD_R_FW_VERSION_H);
@@ -361,8 +361,8 @@ void core_func_start_core (
 		{
 			/* Configure hardware according to clock configuration */
 			/* Use core_func_start_core's input in case there was an hardware change */
-			if (device_is_able_to_repeat_clock   && (commonbank.R_CLOCK_CONFIG & B_CLK_REP)) core_callback_clock_to_repeater();
-			if (device_is_able_to_generate_clock && (commonbank.R_CLOCK_CONFIG & B_CLK_GEN)) core_callback_clock_to_generator();
+			if (device_is_able_to_repeat_clock   && (commonbank.R_CLOCK_CONFIG & B_CLK_REP)) {core_callback_clock_to_repeater();  commonbank.R_HEARTBEAT &= ~B_IS_SYNCHRONIZED;}
+			if (device_is_able_to_generate_clock && (commonbank.R_CLOCK_CONFIG & B_CLK_GEN)) {core_callback_clock_to_generator(); commonbank.R_HEARTBEAT |=  B_IS_SYNCHRONIZED;}
 			if (commonbank.R_CLOCK_CONFIG & B_CLK_LOCK)   core_callback_clock_to_lock();
 			if (commonbank.R_CLOCK_CONFIG & B_CLK_UNLOCK) core_callback_clock_to_unlock();
 		}
@@ -372,7 +372,8 @@ void core_func_start_core (
 	}
 	else
 	{
-		commonbank.R_OPERATION_CTRL = B_OPLEDEN | B_VISUALEN | GM_OP_MODE_STANDBY;
+		commonbank.R_OPERATION_CTRL = B_OPLEDEN | B_VISUALEN | GM_OP_MODE_STANDBY;		
+		commonbank.R_HEARTBEAT &= ~B_IS_ACTIVE;
 		
 		commonbank.R_CLOCK_CONFIG = B_CLK_UNLOCK;
 		core_callback_clock_to_unlock();
@@ -486,8 +487,10 @@ ISR(TCC1_OVF_vect, ISR_NAKED)
 	core_callback_t_new_second();
 	core_callback_t_1ms();	
 	
-	if (commonbank.R_OPERATION_CTRL & B_ALIVE_EN)
-        core_func_send_event(ADD_R_TIMESTAMP_SECOND, true);
+	if ((commonbank.R_OPERATION_CTRL & B_ALIVE_EN) && ((commonbank.R_OPERATION_CTRL & B_HEARTBEAT_EN) == 0))
+		core_func_send_event(ADD_R_TIMESTAMP_SECOND, true);
+	if (commonbank.R_OPERATION_CTRL & B_HEARTBEAT_EN)
+		core_func_send_event(ADD_R_HEARTBEAT, true);
 	
 	uint8_t op_led_comp;
 	switch (commonbank.R_OPERATION_CTRL & MSK_OP_MODE)
@@ -718,6 +721,7 @@ ISR(TCC1_CCA_vect, ISR_NAKED)
                         aux_op_ctrl &= ~MSK_OP_MODE;
                         aux_op_ctrl |= GM_OP_MODE_STANDBY;
                         hwbp_write_common_reg(ADD_R_OPERATION_CTRL, TYPE_U8, &aux_op_ctrl, 1);
+                        commonbank.R_HEARTBEAT &= ~B_IS_ACTIVE;
                     }
                     
                     /* Destroy all data on the buffers */
@@ -1248,6 +1252,13 @@ bool hwbp_read_common_reg(uint8_t add, uint8_t type)
 	/* Update R_CONFIG */
 	else if (add == ADD_R_TIMESTAMP_MICRO)
 		hwbp_read_common_reg_CONFIG();
+	
+	/* Update R_HEARTEAT */
+	else if (add == ADD_R_HEARTBEAT)
+		{
+			if (commonbank.R_CLOCK_CONFIG & B_CLK_GEN)
+				commonbank.R_HEARTBEAT |= B_IS_SYNCHRONIZED;
+		}
 
 	/* Return success */
 	return true;
@@ -1314,7 +1325,7 @@ bool hwbp_write_common_reg(uint8_t add, uint8_t type, uint8_t * content, uint16_
 		uint8_t temp_R_OPERATION_CTRL = commonbank.R_OPERATION_CTRL;
 		
 		/* Update register */
-		commonbank.R_OPERATION_CTRL = reg & (B_ALIVE_EN | B_OPLEDEN | B_VISUALEN | B_MUTE_RPL | MSK_OP_MODE);
+		commonbank.R_OPERATION_CTRL = reg & (B_ALIVE_EN | B_OPLEDEN | B_VISUALEN | B_MUTE_RPL | B_HEARTBEAT_EN |  MSK_OP_MODE);
 		
 		/* Verify if a transition occurs on the B_VISUALEN */
 		if ((reg & B_VISUALEN) && !(temp_R_OPERATION_CTRL & B_VISUALEN))
@@ -1340,14 +1351,17 @@ bool hwbp_write_common_reg(uint8_t add, uint8_t type, uint8_t * content, uint16_
 			sending_registers = false;
 
 			core_callback_device_to_standby();
+			commonbank.R_HEARTBEAT &= ~B_IS_ACTIVE;
 		}
 		if (((reg & MSK_OP_MODE) == GM_OP_MODE_ACTIVE) && ((temp_R_OPERATION_CTRL & MSK_OP_MODE) != GM_OP_MODE_ACTIVE))
 		{
 			core_callback_device_to_active();
+			commonbank.R_HEARTBEAT |= B_IS_ACTIVE;
 		}
 		if (((reg & MSK_OP_MODE) == GM_OP_MODE_SPEED) && ((temp_R_OPERATION_CTRL & MSK_OP_MODE) != GM_OP_MODE_SPEED))
 		{
 			core_callback_device_to_speed();
+			commonbank.R_HEARTBEAT &= ~B_IS_ACTIVE;
 		}
 		
 		/* Return success */
@@ -1537,6 +1551,7 @@ bool hwbp_write_common_reg_CONFIG(void *a)
 		commonbank.R_CLOCK_CONFIG &= ~B_CLK_GEN;			// Clear CLK_GEN bit
 		commonbank.R_CLOCK_CONFIG |=  B_CLK_REP;			// Set CLK_REP bit
 		core_callback_clock_to_repeater();
+		commonbank.R_HEARTBEAT &= ~B_IS_SYNCHRONIZED;
 	
 		/* Removes the timestamp lock if the device is locked */
 		if (commonbank.R_CLOCK_CONFIG & B_CLK_LOCK)
@@ -1553,6 +1568,7 @@ bool hwbp_write_common_reg_CONFIG(void *a)
 		commonbank.R_CLOCK_CONFIG |=  B_CLK_GEN;			// Set CLK_GEN bit
 		commonbank.R_CLOCK_CONFIG &= ~B_CLK_REP;			// Clear CLK_REP bit
 		core_callback_clock_to_generator();
+		commonbank.R_HEARTBEAT |=  B_IS_SYNCHRONIZED;
 	}
 
 	/* Unlock timestamp if was locked */
@@ -1599,6 +1615,7 @@ void core_func_leave_speed_mode_and_go_to_standby_mode(void)
 	{
 		commonbank.R_OPERATION_CTRL = (commonbank.R_OPERATION_CTRL & (~MSK_OP_MODE)) | GM_OP_MODE_STANDBY;
 		core_callback_device_to_standby();
+		commonbank.R_HEARTBEAT &= ~B_IS_ACTIVE;
 	}
 }
 
@@ -1610,7 +1627,18 @@ bool core_bool_is_visual_enabled(void)
 {
 	return (commonbank.R_OPERATION_CTRL & B_VISUALEN) ? true : false;
 }
+
 bool core_bool_speed_mode_is_in_use(void)
 {
 	return ((commonbank.R_OPERATION_CTRL & MSK_OP_MODE) == GM_OP_MODE_SPEED) ? true : false;
+}
+
+bool core_bool_device_is_active(void)
+{
+	return (commonbank.R_HEARTBEAT & B_IS_ACTIVE) ? true : false;
+}
+
+bool core_bool_device_is_synchronized(void)
+{
+	return (commonbank.R_HEARTBEAT & B_IS_SYNCHRONIZED) ? true : false;
 }

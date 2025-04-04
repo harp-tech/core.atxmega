@@ -165,6 +165,10 @@ uint16_t core_func_read_R_TIMESTAMP_MICRO(void);
 bool core_bool_is_visual_enabled(void);
 // Return "true" if the device is in Speed Mode.
 bool core_bool_speed_mode_is_in_use(void);
+// Return "true" if the device is in Active Mode.
+bool core_bool_device_is_active(void);
+// Return "true" if the device is synchronized.
+bool core_bool_device_is_synchronized(void);
 
 
 
