@@ -1325,7 +1325,7 @@ bool hwbp_write_common_reg(uint8_t add, uint8_t type, uint8_t * content, uint16_
 		uint8_t temp_R_OPERATION_CTRL = commonbank.R_OPERATION_CTRL;
 		
 		/* Update register */
-		commonbank.R_OPERATION_CTRL = reg & (B_ALIVE_EN | B_OPLEDEN | B_VISUALEN | B_MUTE_RPL | MSK_OP_MODE);
+		commonbank.R_OPERATION_CTRL = reg & (B_ALIVE_EN | B_OPLEDEN | B_VISUALEN | B_MUTE_RPL | B_HEARTBEAT_EN |  MSK_OP_MODE);
 		
 		/* Verify if a transition occurs on the B_VISUALEN */
 		if ((reg & B_VISUALEN) && !(temp_R_OPERATION_CTRL & B_VISUALEN))
