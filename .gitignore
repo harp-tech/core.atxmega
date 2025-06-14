@@ -1,0 +1,14 @@
+# VS generated files
+.vs
+bin
+obj
+packages
+*.atsuo
+*.user
+*.componentinfo.xml
+
+# files created for compiling the code
+*.o
+*.d
+*.a
+doc_out/
