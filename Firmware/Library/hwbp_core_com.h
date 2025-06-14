@@ -166,17 +166,17 @@ void hwbp_uart_xmit(const uint8_t *dataIn0, uint8_t siz);
 bool hwbp_uart_rcv_now(uint8_t * byte);								// Not used
 
 
-// Called before execute the uart rRX interrupt
+/// Called before execute the uart rRX interrupt
 void core_callback_uart_rx_before_exec(void);
-// Called after execute the uart RX interrupt
+/// Called after execute the uart RX interrupt
 void core_callback_uart_rx_after_exec(void);
-// Called before execute the uart Tx interrupt
+/// Called before execute the uart Tx interrupt
 void core_callback_uart_tx_before_exec(void);
-// Called after execute the uart TX interrupt
+/// Called after execute the uart TX interrupt
 void core_callback_uart_tx_after_exec(void);
-// Called before execute the uart CTS interrupt
+/// Called before execute the uart CTS interrupt
 void core_callback_uart_cts_before_exec(void);
-// Called after execute the uart CTS interrupt
+/// Called after execute the uart CTS interrupt
 void core_callback_uart_cts_after_exec(void);
 
 
