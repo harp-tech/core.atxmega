@@ -1,4 +1,4 @@
-# Harp – Core Library for the ATxmega
+# Harp Core ATxmega
 
 Folder containing the source files for the library that implements Harp on the Atmel's ATxmega family of microcontrollers.
 
