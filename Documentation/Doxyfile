@@ -6,13 +6,12 @@ OUTPUT_DIRECTORY       = doc_out
 STRIP_FROM_PATH        = ../
 OPTIMIZE_OUTPUT_FOR_C  = YES
 EXTRACT_ALL            = YES
-EXTRACT_PRIVATE        = YES
-EXTRACT_PRIV_VIRTUAL   = YES
 EXTRACT_STATIC         = YES
 CASE_SENSE_NAMES       = YES
-INPUT                  = ../README.md ../Firmware
-IMAGE_PATH             = ../Assets
+INPUT                  = ../README.md \
+                         ../Firmware
 RECURSIVE              = YES
+IMAGE_PATH             = ../Assets
 USE_MDFILE_AS_MAINPAGE = README.md
 HTML_HEADER            = template/custom_header.html
 HTML_FOOTER            = template/custom_footer.html
