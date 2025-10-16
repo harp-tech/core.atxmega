@@ -1520,7 +1520,7 @@ bool hwbp_write_common_reg_RESET_APP(void *a)
 		return false;
 	}
 	
-	if (reg == B_BOOT)
+	if (reg & B_BOOT)
 	{
 		shutdown_counter = 3;
 	}
