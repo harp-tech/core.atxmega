@@ -16,6 +16,9 @@
 /************************************************************************/
 #define VH 1
 #define VL 15
+#define PROTOCOL_H 2	// Major
+#define PROTOCOL_L 0	// Minor
+#define PROTOCOL_P 0	// Patch
 /************************************************************************/
 
 /************************************************************************/
@@ -112,7 +115,8 @@ static uint8_t regs_type[] = {
 	TYPE_U8,
 	TYPE_U8,
 	TYPE_U8,
-	TYPE_U16
+	TYPE_U16,
+	TYPE_U8
 };
 
 static uint16_t regs_n_elements[] = {
@@ -134,7 +138,8 @@ static uint16_t regs_n_elements[] = {
 	1,
 	16,
 	8,
-	1
+	1,
+	32
 };
 
 static uint8_t *regs_pointer[] = {
@@ -156,7 +161,8 @@ static uint8_t *regs_pointer[] = {
 	(uint8_t*)(&commonbank.R_TIMESTAMP_OFFSET),
 	(uint8_t*)(commonbank.R_UID),
 	(uint8_t*)(commonbank.R_TAG),
-	(uint8_t*)(&commonbank.R_HEARTBEAT)
+	(uint8_t*)(&commonbank.R_HEARTBEAT),
+	(uint8_t*)(&commonbank.R_VERSION)
 };
 
 
@@ -328,6 +334,26 @@ void core_func_start_core_V2 (
 	/* Reset Tag to zero */
 	for (uint8_t i = 0; i < regs_n_elements[ADD_R_TAG]; i++)
 		commonbank.R_TAG[i] = 0;
+	
+	/* Reset Version to zero */
+	for (uint8_t i = 0; i < regs_n_elements[ADD_R_VERSION]; i++)
+		commonbank.R_VERSION[i] = 0;
+	
+	commonbank.R_VERSION[0] = PROTOCOL_H;
+	commonbank.R_VERSION[1] = PROTOCOL_L;
+	commonbank.R_VERSION[2] = PROTOCOL_P;
+	
+	commonbank.R_VERSION[3] = fwH;
+	commonbank.R_VERSION[4] = fwL;
+	commonbank.R_VERSION[5] = 0;
+	
+	commonbank.R_VERSION[6] = hwH;
+	commonbank.R_VERSION[7] = hwL;
+	commonbank.R_VERSION[8] = 0;
+	
+	commonbank.R_VERSION[9] = 'A';
+	commonbank.R_VERSION[10] = 'T';
+	commonbank.R_VERSION[11] = 'X';
         
     /* Read versions from EEPROM */
     uint8_t previousFwH   = eeprom_rd_byte(EEPROM_ADD_R_FW_VERSION_H);
