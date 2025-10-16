@@ -252,8 +252,38 @@ static void read_device_name_to_register(void)
         commonbank.R_DEVICE_NAME[i] = eeprom_rd_byte(EEPROM_ADD_R_DEVICE_NAME + i);
     }
 }
-
 void core_func_start_core (
+	const uint16_t who_am_i,
+	const uint8_t hwH,
+	const uint8_t hwL,
+	const uint8_t fwH,
+	const uint8_t fwL,
+	const uint8_t assembly,
+	uint8_t *pointer_to_app_regs,
+	const uint16_t app_mem_size_to_save,
+	const uint8_t num_of_app_registers,
+	const uint8_t *device_name,
+	const bool	device_is_able_to_repeat_clock,
+	const bool	device_is_able_to_generate_clock,
+	const uint8_t default_timestamp_offset)
+{
+	/* Start core */
+	core_func_start_core_V2(
+		who_am_i,
+		hwH, hwL,
+		fwH, fwL,
+		assembly,
+		pointer_to_app_regs,
+		app_mem_size_to_save,
+		num_of_app_registers,
+		device_name,
+		device_is_able_to_repeat_clock,
+		device_is_able_to_generate_clock,
+		default_timestamp_offset
+	);
+}
+
+void core_func_start_core_V2 (
     const uint16_t who_am_i,
     const uint8_t hwH,
     const uint8_t hwL,
