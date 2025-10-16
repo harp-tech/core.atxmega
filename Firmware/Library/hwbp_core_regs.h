@@ -77,6 +77,7 @@ struct CommonBank
 
 #define B_NAME_TO_DEFAULT   (1<<3)
 
+#define B_BOOT              (1<<5)
 #define B_BOOT_DEF          (1<<6)
 #define B_BOOT_EE           (1<<7)
 

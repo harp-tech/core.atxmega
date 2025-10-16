@@ -1494,6 +1494,11 @@ bool hwbp_write_common_reg_RESET_APP(void *a)
 		return false;
 	}
 	
+	if (reg == B_BOOT)
+	{
+		shutdown_counter = 3;
+	}
+	
 	/* Save register and reset device */
 	if (reg == B_SAVE)
 	{
