@@ -276,9 +276,8 @@ void core_func_start_core (
 	/* Start core */
 	core_func_start_core_V2(
 		who_am_i,
-		hwH, hwL,
-		fwH, fwL,
-		assembly,
+		hwH, hwL, 0,
+		fwH, fwL, 0,
 		pointer_to_app_regs,
 		app_mem_size_to_save,
 		num_of_app_registers,
@@ -293,16 +292,17 @@ void core_func_start_core_V2 (
     const uint16_t who_am_i,
     const uint8_t hwH,
     const uint8_t hwL,
+	const uint8_t hwP,
     const uint8_t fwH,
     const uint8_t fwL,
-    const uint8_t assembly,
+    const uint8_t fwP,
     uint8_t *pointer_to_app_regs,
     const uint16_t app_mem_size_to_save,
     const uint8_t num_of_app_registers,
     const uint8_t *device_name,
     const bool	device_is_able_to_repeat_clock,
     const bool	device_is_able_to_generate_clock,
-	 const uint8_t default_timestamp_offset)
+	const uint8_t default_timestamp_offset)
 {	
 	/* Shut down watchdog */
 	wdt_disable();
@@ -317,7 +317,7 @@ void core_func_start_core_V2 (
 	commonbank.R_WHO_AM_I = who_am_i;	
 	commonbank.R_HW_VERSION_H = hwH;
 	commonbank.R_HW_VERSION_L = hwL;
-	commonbank.R_ASSEMBLY_VERSION = assembly;
+	commonbank.R_ASSEMBLY_VERSION = 0;
 	commonbank.R_CORE_VERSION_H = VH;
 	commonbank.R_CORE_VERSION_L = VL;
 	commonbank.R_FW_VERSION_H = fwH;
@@ -345,11 +345,11 @@ void core_func_start_core_V2 (
 	
 	commonbank.R_VERSION[3] = fwH;
 	commonbank.R_VERSION[4] = fwL;
-	commonbank.R_VERSION[5] = 0;
+	commonbank.R_VERSION[5] = fwP;
 	
 	commonbank.R_VERSION[6] = hwH;
 	commonbank.R_VERSION[7] = hwL;
-	commonbank.R_VERSION[8] = 0;
+	commonbank.R_VERSION[8] = hwP;
 	
 	commonbank.R_VERSION[9] = 'A';
 	commonbank.R_VERSION[10] = 'T';
