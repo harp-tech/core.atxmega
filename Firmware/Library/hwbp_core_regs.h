@@ -54,7 +54,7 @@ struct CommonBank
 #define ADD_R_VERSION           0x13    // U8[32]
 
 /* Memory limits */
-#define COMMON_BANK_ADD_MAX             0x12
+#define COMMON_BANK_ADD_MAX             0x13
 #define COMMON_BANK_ABSOLUTE_ADD_MAX    0x1C
 
 /* R_OPERATION_CTRL */
