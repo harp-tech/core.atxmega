@@ -15,7 +15,10 @@
 /* Define current version                                               */
 /************************************************************************/
 #define VH 1
-#define VL 14
+#define VL 15
+#define PROTOCOL_H 2	// Major
+#define PROTOCOL_L 0	// Minor
+#define PROTOCOL_P 0	// Patch
 /************************************************************************/
 
 /************************************************************************/
@@ -112,7 +115,8 @@ static uint8_t regs_type[] = {
 	TYPE_U8,
 	TYPE_U8,
 	TYPE_U8,
-	TYPE_U16
+	TYPE_U16,
+	TYPE_U8
 };
 
 static uint16_t regs_n_elements[] = {
@@ -134,7 +138,8 @@ static uint16_t regs_n_elements[] = {
 	1,
 	16,
 	8,
-	1
+	1,
+	32
 };
 
 static uint8_t *regs_pointer[] = {
@@ -156,7 +161,8 @@ static uint8_t *regs_pointer[] = {
 	(uint8_t*)(&commonbank.R_TIMESTAMP_OFFSET),
 	(uint8_t*)(commonbank.R_UID),
 	(uint8_t*)(commonbank.R_TAG),
-	(uint8_t*)(&commonbank.R_HEARTBEAT)
+	(uint8_t*)(&commonbank.R_HEARTBEAT),
+	(uint8_t*)(&commonbank.R_VERSION)
 };
 
 
@@ -252,21 +258,51 @@ static void read_device_name_to_register(void)
         commonbank.R_DEVICE_NAME[i] = eeprom_rd_byte(EEPROM_ADD_R_DEVICE_NAME + i);
     }
 }
-
 void core_func_start_core (
+	const uint16_t who_am_i,
+	const uint8_t hwH,
+	const uint8_t hwL,
+	const uint8_t fwH,
+	const uint8_t fwL,
+	const uint8_t assembly,
+	uint8_t *pointer_to_app_regs,
+	const uint16_t app_mem_size_to_save,
+	const uint8_t num_of_app_registers,
+	const uint8_t *device_name,
+	const bool	device_is_able_to_repeat_clock,
+	const bool	device_is_able_to_generate_clock,
+	const uint8_t default_timestamp_offset)
+{
+	/* Start core */
+	core_func_start_core_V2(
+		who_am_i,
+		hwH, hwL, 0,
+		fwH, fwL, 0,
+		pointer_to_app_regs,
+		app_mem_size_to_save,
+		num_of_app_registers,
+		device_name,
+		device_is_able_to_repeat_clock,
+		device_is_able_to_generate_clock,
+		default_timestamp_offset
+	);
+}
+
+void core_func_start_core_V2 (
     const uint16_t who_am_i,
     const uint8_t hwH,
     const uint8_t hwL,
+	const uint8_t hwP,
     const uint8_t fwH,
     const uint8_t fwL,
-    const uint8_t assembly,
+    const uint8_t fwP,
     uint8_t *pointer_to_app_regs,
     const uint16_t app_mem_size_to_save,
     const uint8_t num_of_app_registers,
     const uint8_t *device_name,
     const bool	device_is_able_to_repeat_clock,
     const bool	device_is_able_to_generate_clock,
-	 const uint8_t default_timestamp_offset)
+	const uint8_t default_timestamp_offset)
 {	
 	/* Shut down watchdog */
 	wdt_disable();
@@ -281,7 +317,7 @@ void core_func_start_core (
 	commonbank.R_WHO_AM_I = who_am_i;	
 	commonbank.R_HW_VERSION_H = hwH;
 	commonbank.R_HW_VERSION_L = hwL;
-	commonbank.R_ASSEMBLY_VERSION = assembly;
+	commonbank.R_ASSEMBLY_VERSION = 0;
 	commonbank.R_CORE_VERSION_H = VH;
 	commonbank.R_CORE_VERSION_L = VL;
 	commonbank.R_FW_VERSION_H = fwH;
@@ -298,6 +334,26 @@ void core_func_start_core (
 	/* Reset Tag to zero */
 	for (uint8_t i = 0; i < regs_n_elements[ADD_R_TAG]; i++)
 		commonbank.R_TAG[i] = 0;
+	
+	/* Reset Version to zero */
+	for (uint8_t i = 0; i < regs_n_elements[ADD_R_VERSION]; i++)
+		commonbank.R_VERSION[i] = 0;
+	
+	commonbank.R_VERSION[0] = PROTOCOL_H;
+	commonbank.R_VERSION[1] = PROTOCOL_L;
+	commonbank.R_VERSION[2] = PROTOCOL_P;
+	
+	commonbank.R_VERSION[3] = fwH;
+	commonbank.R_VERSION[4] = fwL;
+	commonbank.R_VERSION[5] = fwP;
+	
+	commonbank.R_VERSION[6] = hwH;
+	commonbank.R_VERSION[7] = hwL;
+	commonbank.R_VERSION[8] = hwP;
+	
+	commonbank.R_VERSION[9] = 'A';
+	commonbank.R_VERSION[10] = 'T';
+	commonbank.R_VERSION[11] = 'X';
         
     /* Read versions from EEPROM */
     uint8_t previousFwH   = eeprom_rd_byte(EEPROM_ADD_R_FW_VERSION_H);
@@ -1462,6 +1518,11 @@ bool hwbp_write_common_reg_RESET_APP(void *a)
 		shutdown_counter = 3;
 		else
 		return false;
+	}
+	
+	if (reg & B_BOOT)
+	{
+		shutdown_counter = 3;
 	}
 	
 	/* Save register and reset device */
