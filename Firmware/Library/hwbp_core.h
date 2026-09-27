@@ -6,16 +6,16 @@
 
 // Define if not defined
 #ifndef bool
-	#define bool uint8_t
+    #define bool uint8_t
 #endif
 #ifndef true
-	#define true 1
-	#define false 0
+    #define true    1
+    #define false   0
 #endif
 
 typedef struct {
-	uint32_t second;
-	uint16_t usecond;
+    uint32_t second;
+    uint16_t usecond;
 } timestamp_t;
 
 /// Used to define the clock direction default of the device.
@@ -115,10 +115,10 @@ bool core_clock_to_unlock(void);
 
 /// It is mandatory that this function is the first of the application code.
 void core_func_start_core_V2 (
-	const uint16_t who_am_i,
+    const uint16_t who_am_i,
     const uint8_t hwH,
     const uint8_t hwL,
-	const uint8_t hwP,
+    const uint8_t hwP,
     const uint8_t fwH,
     const uint8_t fwL,
     const uint8_t fwP,
@@ -126,10 +126,10 @@ void core_func_start_core_V2 (
     const uint16_t app_mem_size_to_save,
     const uint8_t num_of_app_registers,
     const uint8_t *device_name,
-    const bool	device_is_able_to_repeat_clock,
-    const bool	device_is_able_to_generate_clock,
-	const uint8_t default_timestamp_offset
-	);
+    const bool  device_is_able_to_repeat_clock,
+    const bool  device_is_able_to_generate_clock,
+    const uint8_t default_timestamp_offset
+    );
 
 /// Old initialization function. Use "core_func_start_core_V2()" instead.
 void core_func_start_core (
@@ -143,10 +143,10 @@ void core_func_start_core (
     const uint16_t app_mem_size_to_save,
     const uint8_t num_of_app_registers,
     const uint8_t *device_name,
-	const bool	device_is_able_to_repeat_clock,
-	const bool	device_is_able_to_generate_clock,
-	const uint8_t default_timestamp_offset
-	);
+    const bool  device_is_able_to_repeat_clock,
+    const bool  device_is_able_to_generate_clock,
+    const uint8_t default_timestamp_offset
+    );
 
 /// Call this function in case of error
 /// A power up or reset must be performed to remove the device from this state
