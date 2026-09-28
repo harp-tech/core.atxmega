@@ -54,7 +54,7 @@ jobs:
       # ----------------------------------------------------------------------- Build documentation
       - name: Build documentation
         id: build-documentation
-        working-directory: Documentation
+        working-directory: docs
         run: doxygen
 
       # ----------------------------------------------------------------------- Collect artifacts
@@ -62,7 +62,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         if: steps.build-documentation.outcome == 'success' && always()
         with:
-          path: Documentation/doc_out/html/
+          path: docs/doc_out/html/
 
   # =====================================================================================================================================================================
   # Publish documentation

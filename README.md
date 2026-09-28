@@ -31,9 +31,9 @@ The code is developed on the [Atmel](http://www.atmel.com/)'s IDE with the name 
 ### Compile the Harp Core
 
 1. Install the Atmel Studio.
-2. Open the solution named **Core.atsln** on the folder **Firmware**.
+2. Open the solution named **core.atxmega.atsln**.
 3. To compile, use the command **Build > Rebuild Solution** (that can be issued using the shortcut Ctrl+Alt+F7).
-4. The output library (files with extension **.a**) can be found on the folder **Firmware\Core\Debug**.
+4. The output library (files with extension **.a**) can be found on the folder **firmware/Debug**.
 
 ### Choose the right microcontroller connections
 
@@ -41,7 +41,7 @@ On the Harp devices, two packages are being used: 44 and 100 pins. The main adva
 
 #### Connections for the 44 pins version (using ATxmega128A4U)
 
-![CoreLibrary](Assets/44_Pins_Connection_Diagram.jpg)
+![CoreLibrary](docs/images/44_Pins_Connection_Diagram.jpg)
 
 **Note:** It's recommended a good 32 MHz clock source, like the MEMS Oscillator DSC1001CI5-032.0000T from [Microchip](http://www.microchip.com/) that can be found on [Mouser](www.mouser.com) or [Digi-Key](http://www.digikey.com/).
 
