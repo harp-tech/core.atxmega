@@ -93,6 +93,12 @@
         </avrgcc.assembler.general.IncludePaths>
       </AvrGcc>
     </ToolchainSettings>
+    <UsesExternalMakeFile>True</UsesExternalMakeFile>
+    <BuildTarget>all</BuildTarget>
+    <CleanTarget>clean</CleanTarget>
+    <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
+    <OutputDirectory>
+    </OutputDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <ToolchainSettings>
@@ -137,8 +143,9 @@
     <UsesExternalMakeFile>True</UsesExternalMakeFile>
     <BuildTarget>all</BuildTarget>
     <CleanTarget>clean</CleanTarget>
-    <ExternalMakeFilePath>Debug\CoreMakefile</ExternalMakeFilePath>
-    <OutputDirectory>Debug</OutputDirectory>
+    <ExternalMakeFilePath>Makefile</ExternalMakeFilePath>
+    <OutputDirectory>
+    </OutputDirectory>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="cpu.c">
