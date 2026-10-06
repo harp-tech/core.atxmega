@@ -600,10 +600,17 @@ uint16_t CTS_timeout_counter = 0;
     extern uint8_t hwbp_uart_head;
 #endif
 
+static void __attribute__((noinline)) handle_500us_timer(void);
+
 ISR(TCC1_CCA_vect, ISR_NAKED)
 {
     SYNC_TRIGGER_TIMER;
+    handle_500us_timer();
+    reti();
+}
 
+static void handle_500us_timer(void)
+{
     TCC1_CCA += _500us_cca_values[_500us_cca_index++ & 0x07];
 
     core_callback_t_before_exec();
@@ -853,8 +860,6 @@ ISR(TCC1_CCA_vect, ISR_NAKED)
     if (TCC1_INTFLAGS & TC1_CCAIF_bm)
         if (shutdown_counter == 0)
             core_func_catastrophic_error_detected();
-
-    reti();
 }
 
 
