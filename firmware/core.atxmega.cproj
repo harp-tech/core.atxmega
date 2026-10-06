@@ -15,7 +15,7 @@
     <AvrGccProjectExtensions>
     </AvrGccProjectExtensions>
     <AssemblyName>core</AssemblyName>
-    <Name>Library</Name>
+    <Name>core.atxmega</Name>
     <RootNamespace>core</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>

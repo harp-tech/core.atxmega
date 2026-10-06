@@ -1,5 +1,5 @@
 ## Prerequisites
-[Doxygen](https://doxygen.nl/) and [Graphviz](https://graphviz.org/) must first be installed.
+[Doxygen 1.12.0](https://github.com/doxygen/doxygen/releases/tag/Release_1_12_0) and [Graphviz](https://graphviz.org/download/) must first be installed. Both pages provide downloads for Windows, Linux and macOS.
 
 To build the documentation, invoke:
 ````

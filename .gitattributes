@@ -1,0 +1,6 @@
+# Auto detect text files and normalize line endings
+* text=auto
+
+# Code
+*.c diff=cpp
+*.h diff=cpp
