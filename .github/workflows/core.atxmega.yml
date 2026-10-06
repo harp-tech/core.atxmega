@@ -35,6 +35,9 @@ jobs:
   build-firmware:
     name: Build firmware
     runs-on: windows-latest
+    permissions:
+      # Needed to attach files to releases
+      contents: write
     defaults:
       run:
         shell: bash
@@ -61,20 +64,45 @@ jobs:
           unzip -q -o avr8-gnu-toolchain.zip -d "$(cygpath -u "$RUNNER_TEMP")"
           cygpath -w "$(cygpath -u "$RUNNER_TEMP")/avr8-gnu-toolchain-win32_x86/bin" >> "$GITHUB_PATH"
 
+      # ----------------------------------------------------------------------- Configure build
+      - name: Configure build
+        id: configure-build
+        uses: harp-tech/configure-build@v2
+
       # ----------------------------------------------------------------------- Build firmware
       - name: Build firmware
         id: build
         working-directory: firmware
-        run: make all
+        run: make all CORE_VERSION=$CiBuildVersion
+
+      # ----------------------------------------------------------------------- Package firmware
+      - name: Package firmware
+        id: package
+        working-directory: firmware
+        shell: pwsh
+        run: |
+          $headers = Get-ChildItem *.h
+          foreach ($library in Get-ChildItem bin/*.a) {
+            $archive = $library.BaseName -replace '^lib', 'core-' -replace '_', '-'
+            Compress-Archive -Path (@($library) + $headers) -DestinationPath "bin/$archive.zip" -Force
+          }
 
       # ----------------------------------------------------------------------- Collect artifacts
-      - name: Collect libraries
+      - name: Collect firmware packages
         uses: actions/upload-artifact@v7
-        if: steps.build.outcome == 'success' && always()
+        if: steps.package.outcome == 'success' && always()
         with:
-          name: Libraries
+          name: Firmware-${{env.CiBuildVersion}}
           if-no-files-found: error
-          path: firmware/bin/*.a
+          path: firmware/bin/*.zip
+
+      # ----------------------------------------------------------------------- Upload release assets
+      - name: Upload release assets
+        if: github.event_name == 'release'
+        working-directory: firmware
+        run: gh release upload --repo ${{github.repository}} ${{github.event.release.tag_name}} bin/*.zip --clobber
+        env:
+          GH_TOKEN: ${{github.token}}
 
   # =====================================================================================================================================================================
   # Build documentation
