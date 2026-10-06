@@ -1,0 +1,159 @@
+# =======================================================================================================================================================================
+# core.atxmega CI/CD
+# =======================================================================================================================================================================
+# Index:
+# * Build firmware
+# * Build documentation
+# * Publish documentation
+# =======================================================================================================================================================================
+name: core.atxmega
+on:
+  push:
+    # This prevents tag pushes from triggering this workflow
+    branches: ['**']
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      publish-documentation:
+        description: "Publish documentation to GitHub Pages?"
+        default: "false"
+env:
+  AVR_TOOLCHAIN_URL: https://ww1.microchip.com/downloads/aemDocuments/documents/OTH/ProductDocuments/SoftwareTools/avr8-gnu-toolchain-3.6.2.1778-win32.any.x86.zip
+  AVR_TOOLCHAIN_SHA256: eeef51253ef8e24260dfef50f8e735eb5a950c3bd559899dd60ba1a24eb38ab9
+  DOXYGEN_URL: https://github.com/doxygen/doxygen/releases/download/Release_1_12_0/doxygen-1.12.0.linux.bin.tar.gz
+  DOXYGEN_SHA256: 3c42c3f3fb206732b503862d9c9c11978920a8214f223a3950bbf2520be5f647
+jobs:
+  # =====================================================================================================================================================================
+  # Build firmware
+  #  ___      _ _    _    __ _
+  # | _ )_  _(_) |__| |  / _(_)_ _ _ ____ __ ____ _ _ _ ___
+  # | _ \ || | | / _` | |  _| | '_| '  \ V  V / _` | '_/ -_)
+  # |___/\_,_|_|_\__,_| |_| |_|_| |_|_|_\_/\_/\__,_|_| \___|
+  # =====================================================================================================================================================================
+  build-firmware:
+    name: Build firmware
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      # ----------------------------------------------------------------------- Checkout
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # ----------------------------------------------------------------------- Set up tools
+      - name: Restore tool cache
+        id: tool-cache
+        uses: actions/cache@v5
+        with:
+          path: avr8-gnu-toolchain.zip
+          key: avr8-gnu-toolchain-${{env.AVR_TOOLCHAIN_SHA256}}
+
+      - name: Download AVR-GCC
+        if: steps.tool-cache.outputs.cache-hit != 'true'
+        run: curl --fail --silent --show-error --location --output avr8-gnu-toolchain.zip "$AVR_TOOLCHAIN_URL"
+
+      - name: Install AVR-GCC
+        run: |
+          echo "$AVR_TOOLCHAIN_SHA256 avr8-gnu-toolchain.zip" | sha256sum --check --strict
+          unzip -q -o avr8-gnu-toolchain.zip -d "$(cygpath -u "$RUNNER_TEMP")"
+          cygpath -w "$(cygpath -u "$RUNNER_TEMP")/avr8-gnu-toolchain-win32_x86/bin" >> "$GITHUB_PATH"
+
+      # ----------------------------------------------------------------------- Build firmware
+      - name: Build firmware
+        id: build
+        working-directory: firmware
+        run: make all
+
+      # ----------------------------------------------------------------------- Collect artifacts
+      - name: Collect libraries
+        uses: actions/upload-artifact@v7
+        if: steps.build.outcome == 'success' && always()
+        with:
+          name: Libraries
+          if-no-files-found: error
+          path: firmware/bin/*.a
+
+  # =====================================================================================================================================================================
+  # Build documentation
+  #  ___      _ _    _      _                            _        _   _
+  # | _ )_  _(_) |__| |  __| |___  __ _  _ _ __  ___ _ _| |_ __ _| |_(_)___ _ _
+  # | _ \ || | | / _` | / _` / _ \/ _| || | '  \/ -_) ' \  _/ _` |  _| / _ \ ' \
+  # |___/\_,_|_|_\__,_| \__,_\___/\__|\_,_|_|_|_\___|_||_\__\__,_|\__|_\___/_||_|
+  # =====================================================================================================================================================================
+  build-documentation:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    steps:
+      # ----------------------------------------------------------------------- Checkout
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # ----------------------------------------------------------------------- Set up tools
+      - name: Restore tool cache
+        id: tool-cache
+        uses: actions/cache@v5
+        with:
+          path: doxygen.tar.gz
+          key: doxygen-${{env.DOXYGEN_SHA256}}
+
+      # We don't use apt to acquire Doxygen because the version provided by Ubuntu is far too old
+      - name: Download Doxygen
+        if: steps.tool-cache.outputs.cache-hit != 'true'
+        run: wget --no-verbose --output-document doxygen.tar.gz "$DOXYGEN_URL"
+
+      - name: Install Doxygen
+        run: |
+          echo "$DOXYGEN_SHA256 doxygen.tar.gz" | sha256sum --check --strict
+          tar -xf doxygen.tar.gz -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/doxygen-1.12.0/bin" >> "$GITHUB_PATH"
+
+      - name: Install Graphviz
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz
+
+      # ----------------------------------------------------------------------- Build documentation
+      - name: Build documentation
+        id: build-documentation
+        working-directory: docs
+        run: doxygen
+
+      # ----------------------------------------------------------------------- Collect artifacts
+      - name: Collect documentation website artifact
+        uses: actions/upload-pages-artifact@v5
+        if: steps.build-documentation.outcome == 'success' && always()
+        with:
+          path: docs/doc_out/html/
+
+  # =====================================================================================================================================================================
+  # Publish documentation
+  #  ___      _    _ _    _         _                            _        _   _
+  # | _ \_  _| |__| (_)__| |_    __| |___  __ _  _ _ __  ___ _ _| |_ __ _| |_(_)___ _ _
+  # |  _/ || | '_ \ | (_-< ' \  / _` / _ \/ _| || | '  \/ -_) ' \  _/ _` |  _| / _ \ ' \
+  # |_|  \_,_|_.__/_|_/__/_||_| \__,_\___/\__|\_,_|_|_|_\___|_||_\__\__,_|\__|_\___/_||_|
+  # =====================================================================================================================================================================
+  publish-documentation:
+    name: Publish documentation
+    runs-on: ubuntu-latest
+    needs: [build-firmware, build-documentation]
+    permissions:
+      # Both required by actions/deploy-pages
+      pages: write
+      id-token: write
+    environment:
+      name: documentation-website
+      url: ${{steps.publish.outputs.page_url}}
+    if: |
+      !cancelled() && !failure() && needs.build-documentation.result == 'success'
+      && (github.event_name == 'release'
+        || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish-documentation == 'true')
+        || (vars.CONTINUOUS_DOCUMENTATION && github.event_name != 'pull_request')
+      )
+    steps:
+      # ----------------------------------------------------------------------- Publish to GitHub Pages
+      - name: Publish to GitHub Pages
+        id: publish
+        uses: actions/deploy-pages@v5
