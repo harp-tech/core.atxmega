@@ -1,67 +1,62 @@
 # Harp Core ATxmega
 
-Folder containing the source files for the library that implements Harp on the Atmel's ATxmega family of microcontrollers.
+A Harp core for the ATxmega family of microcontrollers that implements the [Harp standard](https://github.com/harp-tech/protocol) to serve as the basis of Harp device firmware.
 
-## What is the Core Library for the ATxmega?
+## What is the Harp core for the ATxmega?
 
-It's a piece of code that implements the Harp infrastructure into the microcontroller.
-The output is a library that is then included in each Harp device's project using Atmel Studio.
+The core is distributed as a static library, built for each supported microcontroller, that the firmware of each Harp device links against. It provides the common functionality that every device needs. Specifically, it:
 
-[ATxmega](http://www.atmel.com/products/microcontrollers/avr/avr_xmega.aspx) is a familly of microcontrollers provided by [Atmel](http://www.atmel.com/).
+* Handles the serial communication with the Controller, including the transmit and receive buffers
+* Parses requests from the Controller and sends replies and events following the [Harp Binary Protocol](https://harp-tech.org/protocol/BinaryProtocol-8bit.html)
+* Implements the core registers and device operation defined in [Device Registers and Operation](https://harp-tech.org/protocol/Device.html), and routes requests for application registers to the device firmware
+* Manages the timestamp and synchronizes it to the [Harp Synchronization Clock](https://harp-tech.org/protocol/SynchronizationClock.html)
+* Initializes and handles the microcontroller clock
 
-The main features are:
+The clock generator build of the core instead transmits the Harp Synchronization Clock itself, with every byte timed to the device clock.
 
-* Take care of the comunication with the computer (including Tx and Rx buffers)
-* Implement the Harp protocol
-* Implement the Common and User registers banks
-* Manage the timestamp and synchronization
-* Control the state LED
-* Initialize and handle microcontroller's clock
+## What can I find in this repository?
 
-## What can I find on this folder?
+The source code of the Harp library for the ATxmega is in the **firmware** folder, and the source of its documentation is in the **docs** folder.
 
-The source code to construct the Harp library for Atxmega
+## How do I get set up?
 
-## What software do I need to view or open the files?
+### Compile the core
 
-The code is developed on the [Atmel](http://www.atmel.com/)'s IDE with the name [Atmel Studio](http://www.atmel.com/tools/ATMELSTUDIO.aspx).
+ATxmega is a family of microcontrollers originally developed by Atmel and now provided by [Microchip](https://www.microchip.com/). The code is developed and built with Microchip Studio.
 
-## How do I get set up? ###
-
-### Compile the Harp Core
-
-1. Install the Atmel Studio.
-2. Open the solution named **core.atxmega.atsln**.
-3. To compile, use the command **Build > Rebuild Solution** (that can be issued using the shortcut Ctrl+Alt+F7).
-4. The output library (files with extension **.a**) can be found on the folder **firmware/Debug**.
+1. Install [Microchip Studio](https://www.microchip.com/en-us/tools-resources/develop/microchip-studio) 7.0.2594, formerly Atmel Studio 7, which includes version 3.6.2.1778 of the AVR 8-bit Toolchain.
+2. Open the solution file **core.atxmega.atsln**.
+3. To compile, use the command **Build > Rebuild Solution**, or the shortcut Ctrl+Alt+F7.
+4. The output libraries, which are the files with extension **.a**, can be found in the folder **firmware/bin**.
 
 ### Choose the right microcontroller connections
 
-On the Harp devices, two packages are being used: 44 and 100 pins. The main advantage of using 100 pins (of course, more GPIOS) is that this package offers more timers.
+Harp devices use two packages, with 44 and 100 pins. Besides more GPIOs, the main advantage of the 100-pin package is that it offers more timers.
 
-#### Connections for the 44 pins version (using ATxmega128A4U)
+#### Connections for the 44-pin version using the ATxmega128A4U
 
 ![CoreLibrary](docs/images/44_Pins_Connection_Diagram.jpg)
 
-**Note:** It's recommended a good 32 MHz clock source, like the MEMS Oscillator DSC1001CI5-032.0000T from [Microchip](http://www.microchip.com/) that can be found on [Mouser](www.mouser.com) or [Digi-Key](http://www.digikey.com/).
+**Note:** A good 32 MHz clock source is recommended, such as the MEMS oscillator DSC1001CI5-032.0000T from [Microchip](https://www.microchip.com/), which can be found on [Mouser](https://www.mouser.com/) or [Digi-Key](https://www.digikey.com/).
 
-#### Connections of the current supported microcontrollers
+#### Connections for each supported microcontroller
 
-| **Signal**          |                       |                   |                   |                 |
-|-|-|-|-|-|
-| Main Serial: CTS    | PE0                   | PE0               | PJ6               | PE0             |
-| Main Serial: RTS    | PE1                   | PE1               | PK0               | PE1             |
-| Main Serial: RX     | PE2                   | PE2               | PF2               | PE2             |
-| Main Serial: TX     | PE3                   | PE3               | PF3               | PE3             |
-| Timestamp: In       | PC2                   | PD6               | PC6               | PC2             |
-| State LED           | PR0                   | PD5               | PA6               | PR0             |
-| Auxiliar Serial: RX | Not Used              | Not Used          | Not used          | PD2             |
-| Auxiliar Serial: TX | Not Used              | Not Used          | Not used          | PD3             |
-|                     |                       |                   |                   |                 |
-| Microcontroller used| ATxmega32A4U          | ATxmega64A4U      | ATxmega128A1U     | ATxmega128A4U   |
-| Internall Buffer    | 2 KBytes              | 2 KBytes          | 6 KBytes          | 6 KBytes        |
-| **Library to Use**  | *libATxmega32A4U.a*   |*libATxmega64A4U.a*|*libATxmega128A1U.a*|*libATxmega128A4U.a*|
+| **Signal**           | [ATxmega32A4U](https://www.microchip.com/en-us/product/ATxmega32A4U) | [ATxmega64A4U](https://www.microchip.com/en-us/product/ATxmega64A4U) | [ATxmega128A1U](https://www.microchip.com/en-us/product/ATxmega128A1U) | [ATxmega128A4U](https://www.microchip.com/en-us/product/ATxmega128A4U) | [ATxmega16A4U](https://www.microchip.com/en-us/product/ATxmega16A4U), clock generator |
+|-|-|-|-|-|-|
+| Main Serial: CTS     | PE0                 | PE0                 | PJ6                  | PE0                  | PE0                         |
+| Main Serial: RTS     | PE1                 | PE1                 | PK0                  | PE1                  | PE1                         |
+| Main Serial: RX      | PE2                 | PE2                 | PF2                  | PE2                  | PE2                         |
+| Main Serial: TX      | PE3                 | PE3                 | PF3                  | PE3                  | PE3                         |
+| Sync Clock: RX       | PC2                 | PD6                 | PC6                  | PC2                  | Not used                    |
+| Sync Clock: TX       | Not used            | Not used            | Not used             | Not used             | PD7                         |
+| State LED            | PR0                 | PD5                 | PA6                  | PR0                  | PD5                         |
+| Auxiliary Serial: RX | Not used            | Not used            | Not used             | PD2                  | Not used                    |
+| Auxiliary Serial: TX | Not used            | Not used            | Not used             | PD3                  | Not used                    |
+| Transmit Buffer      | 2048 bytes          | 2048 bytes          | 5120 bytes           | 5120 bytes           | 512 bytes                   |
+| **Library to Use**   | *libATxmega32A4U*   | *libATxmega64A4U*   | *libATxmega128A1U*   | *libATxmega128A4U*   | *libATxmega16A4U_ClockSync* |
 
-## Licensing ##
+Each library file name ends with the core version, for example *libATxmega128A4U-1.15.a*. The ATxmega16A4U library is the clock generator build of the core, used by the [Clock Synchronizer](https://github.com/harp-tech/device.clocksynchronizer) and the [Timestamp Generator Gen3](https://github.com/harp-tech/device.timestampgeneratorgen3). It transmits the Harp Synchronization Clock for other devices to receive, so it uses the TX line instead of the RX line.
 
-Each subdirectory will contain a license or, possibly, a set of licenses if it involves both hardware and software.
+## Licensing
+
+The source code is released under the MIT license, found in the LICENSE file at the root of the repository.
