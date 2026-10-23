@@ -684,75 +684,34 @@ static void handle_500us_timer(void)
         }
         else if (rx_cmd_ready)
         {
-            if (rx_cmd_ready == 1)
+            uint8_t * buff = (rx_cmd_ready == 1) ? rxbuff_hwbp_uart_buff1 : rxbuff_hwbp_uart_buff2;
+            uint8_t cmd_len = (rx_cmd_ready == 1) ? cmd_len_buff1 : cmd_len_buff2;
+
+            /* Re-enable high level interrupts */
+            PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
+            PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
+
+            uint8_t * type = (*(buff+1) != 255) ? (buff+4) : (buff+6);
+
+            if (*type & 16)
             {
-                /* Re-enable high level interrupts */
-                PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
-                PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
-
-                uint8_t * type = (*(rxbuff_hwbp_uart_buff1+1) != 255) ? (rxbuff_hwbp_uart_buff1+4) : (rxbuff_hwbp_uart_buff1+6);
-
-                if (*type & 16)
+                /* If it's timestamped */
+                if (*((uint32_t*)(type+1)) < commonbank.R_TIMESTAMP_SECOND ||       // if timestamp < device's timestamp
+                    (*((uint32_t*)(type+1)) == commonbank.R_TIMESTAMP_SECOND &&     // or timestamp = device's timestamp
+                     *((uint16_t*)(type+1+4)) <= TCC1_CNT))                         // and us <= device's us
                 {
-                    /* If it's timestamped */
-                    if (*((uint32_t*)(type+1)) < commonbank.R_TIMESTAMP_SECOND)         // if timestamp < device's timestamp
-                    {
-                        parse_and_reply(rxbuff_hwbp_uart_buff1, cmd_len_buff1);
-                        TGL_STATE_LED;
-                    }
-                    else if (*((uint32_t*)(type+1)) == commonbank.R_TIMESTAMP_SECOND)   // if timestamp = device's timestamp
-                    {
-                        if (*((uint16_t*)(type+1+4)) <= TCC1_CNT)                       // if us <= device's us
-                        {
-                            parse_and_reply(rxbuff_hwbp_uart_buff1, cmd_len_buff1);
-                            TGL_STATE_LED;
-                        }
-                    }
-                    else
-                    {
-                        /* Copy to temporary buffer*/
-                        memcpy(rxbuff_hwbp_uart_temp_buff1, rxbuff_hwbp_uart_buff1, rxbuff_hwbp_uart_buff1[1] + 2);
-                    }
+                    parse_and_reply(buff, cmd_len);
+                    TGL_STATE_LED;
                 }
                 else
                 {
-                    parse_and_reply(rxbuff_hwbp_uart_buff1, cmd_len_buff1);
+                    /* Copy to temporary buffer*/
+                    memcpy(rxbuff_hwbp_uart_temp_buff1, buff, buff[1] + 2);
                 }
             }
             else
             {
-                /* Re-enable high level interrupts */
-                PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
-                PMIC_CTRL = PMIC_RREN_bm | PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;
-
-                uint8_t * type = (*(rxbuff_hwbp_uart_buff2+1) != 255) ? (rxbuff_hwbp_uart_buff2+4) : (rxbuff_hwbp_uart_buff2+6);
-
-                if (*type & 16)
-                {
-                    /* If it's timestamped */
-                    if (*((uint32_t*)(type+1)) < commonbank.R_TIMESTAMP_SECOND)         // if timestamp < device's timestamp
-                    {
-                        parse_and_reply(rxbuff_hwbp_uart_buff2, cmd_len_buff2);
-                        TGL_STATE_LED;
-                    }
-                    else if (*((uint32_t*)(type+1)) == commonbank.R_TIMESTAMP_SECOND)   // if timestamp = device's timestamp
-                    {
-                        if (*((uint16_t*)(type+1+4)) <= TCC1_CNT)                       // if us <= device's us
-                        {
-                            parse_and_reply(rxbuff_hwbp_uart_buff2, cmd_len_buff2);
-                            TGL_STATE_LED;
-                        }
-                    }
-                    else
-                    {
-                        /* Copy to temporary buffer*/
-                        memcpy(rxbuff_hwbp_uart_temp_buff1, rxbuff_hwbp_uart_buff2, rxbuff_hwbp_uart_buff2[1] + 2);
-                    }
-                }
-                else
-                {
-                    parse_and_reply(rxbuff_hwbp_uart_buff2, cmd_len_buff2);
-                }
+                parse_and_reply(buff, cmd_len);
             }
 
             /* Disable high level interrupts */
