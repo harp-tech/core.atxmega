@@ -1505,6 +1505,12 @@ bool hwbp_write_common_reg_RESET_APP(void *a)
 {
     uint8_t reg = *((uint8_t*)a);
 
+    /* Boot bits are read-only */
+    if (reg & (B_BOOT_DEF | B_BOOT_EE))
+    {
+        return false;
+    }
+
     /* Perform a reset to default values*/
     if (reg == B_RST_DEF)
     {

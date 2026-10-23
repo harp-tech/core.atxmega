@@ -93,8 +93,8 @@ struct CommonBank
 #define B_CLK_LOCK          (1<<7)
 
 /* ADD_R_HEARTBEAT */
-#define B_IS_SYNCHRONIZED   (1<<0)
-#define B_IS_ACTIVE         (1<<1)
+#define B_IS_ACTIVE         (1<<0)
+#define B_IS_SYNCHRONIZED   (1<<1)
 
 
 #endif /* _HWBP_CORE_REGS_H_ */
