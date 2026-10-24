@@ -82,9 +82,10 @@ jobs:
         shell: pwsh
         run: |
           $headers = Get-ChildItem *.h
+          $license = Get-Item ../LICENSE
           foreach ($library in Get-ChildItem bin/*.a) {
             $archive = $library.BaseName -replace '^lib', 'core-' -replace '_', '-'
-            Compress-Archive -Path (@($library) + $headers) -DestinationPath "bin/$archive.zip" -Force
+            Compress-Archive -Path (@($library) + $headers + $license) -DestinationPath "bin/$archive.zip" -Force
           }
 
       # ----------------------------------------------------------------------- Collect artifacts
